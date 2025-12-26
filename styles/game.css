@@ -900,7 +900,6 @@ body {
     }
 
     .battle-log {
-        height: 60px;
         font-size: 0.8rem;
     }
 
@@ -1003,8 +1002,8 @@ body {
     }
 
     .battle-log {
-        height: 120px;
-        min-height: 100px;
+        height: 80px;
+        min-height: 80px;
     }
 
     .battle-card-area {
