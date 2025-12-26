@@ -1,0 +1,945 @@
+/* 重新設計的遊戲頁面樣式 - 簡潔版 */
+
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@400;700;900&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --rarity-common: #808080;
+    --rarity-rare: #00b0f0;
+    --rarity-epic: #9900ff;
+    --rarity-legendary: #ffc000;
+    --rarity-mythic: #ff0000;
+
+    --dark-bg: #0a0a0f;
+    --card-bg: rgba(20, 20, 40, 0.95);
+    --border-color: rgba(0, 255, 255, 0.3);
+    --accent-cyan: #00ffff;
+    --accent-magenta: #ff00ff;
+}
+
+body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background: linear-gradient(135deg, #0a0a0f 0%, #16213e 50%, #0a0a0f 100%);
+    color: #e0e0e0;
+    height: 100vh;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+}
+
+.game-container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+    gap: 12px;
+}
+
+/* 遊戲標題欄 */
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--card-bg);
+    padding: 12px 20px;
+    border-radius: 10px;
+    border: 2px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.header-btn {
+    padding: 8px 16px;
+    background: rgba(0, 255, 255, 0.1);
+    border: 2px solid var(--accent-cyan);
+    color: var(--accent-cyan);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.3s;
+}
+
+.header-btn:hover {
+    background: rgba(0, 255, 255, 0.3);
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+}
+
+.bench-btn {
+    border-color: var(--accent-magenta);
+    color: var(--accent-magenta);
+    background: rgba(255, 0, 255, 0.1);
+}
+
+.bench-btn:hover {
+    background: rgba(255, 0, 255, 0.3);
+    box-shadow: 0 0 15px rgba(255, 0, 255, 0.5);
+}
+
+.turn-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.current-turn {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--accent-cyan);
+    text-shadow: 0 0 10px var(--accent-cyan);
+}
+
+.round-count {
+    font-size: 1rem;
+    color: #aaa;
+}
+
+/* 戰鬥主區域 - 左右布局 */
+.battle-main {
+    flex: 1;
+    display: flex;
+    gap: 15px;
+    min-height: 0;
+}
+
+/* 玩家區域 - 左右兩側 */
+.player-side {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+}
+
+.player-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 16px;
+    background: var(--card-bg);
+    border-radius: 8px;
+    border: 2px solid var(--border-color);
+    flex-shrink: 0;
+    gap: 4px;
+}
+
+.player-name {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--accent-cyan);
+    text-shadow: 0 0 10px var(--accent-cyan);
+}
+
+.hand-count {
+    font-size: 1rem;
+    color: #aaa;
+}
+
+/* 戰鬥卡區域 */
+.battle-card-area {
+    flex: 1;
+    background: rgba(255, 0, 100, 0.05);
+    border: 3px dashed rgba(255, 0, 100, 0.4);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    padding: 15px;
+    min-height: 300px;
+}
+
+.battle-card-area:hover {
+    border-color: rgba(255, 0, 100, 0.7);
+    background: rgba(255, 0, 100, 0.1);
+}
+
+.empty-slot {
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 1.5rem;
+    font-weight: 900;
+    text-align: center;
+}
+
+/* 中央區域 */
+.center-section {
+    width: 280px;
+    flex-shrink: 0;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.vs-text {
+    font-size: 2.5rem;
+    text-align: center;
+    color: var(--accent-magenta);
+    text-shadow: 0 0 20px var(--accent-magenta);
+    animation: pulse 2s ease-in-out infinite;
+    line-height: 1.2;
+    font-weight: 900;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.8;
+        transform: scale(1.05);
+    }
+}
+
+.battle-log {
+    flex: 1;
+    overflow-y: auto;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 10px;
+    font-size: 0.85rem;
+    color: #ccc;
+    font-family: 'Courier New', monospace;
+    min-height: 200px;
+}
+
+/* 戰鬥卡片 */
+.battle-card {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--card-bg) 0%, rgba(30, 30, 60, 0.95) 100%);
+    border-radius: 12px;
+    padding: 16px;
+    border: 3px solid;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+}
+
+.battle-card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+}
+
+.battle-card.rarity-一般 {
+    border-color: var(--rarity-common);
+}
+
+.battle-card.rarity-稀有 {
+    border-color: var(--rarity-rare);
+    box-shadow: 0 0 20px rgba(0, 176, 240, 0.4);
+}
+
+.battle-card.rarity-史詩 {
+    border-color: var(--rarity-epic);
+    box-shadow: 0 0 20px rgba(153, 0, 255, 0.4);
+}
+
+.battle-card.rarity-傳說 {
+    border-color: var(--rarity-legendary);
+    box-shadow: 0 0 20px rgba(255, 192, 0, 0.4);
+}
+
+.battle-card.rarity-神話 {
+    border-color: var(--rarity-mythic);
+    box-shadow: 0 0 25px rgba(255, 0, 0, 0.6);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-name {
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: #fff;
+}
+
+.card-rarity {
+    font-size: 1rem;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-weight: 700;
+}
+
+.card-stats {
+    display: flex;
+    gap: 20px;
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+.stat-label {
+    color: #888;
+}
+
+.stat-value {
+    color: #fff;
+}
+
+.hp-bar-container {
+    width: 100%;
+}
+
+.hp-bar {
+    width: 100%;
+    height: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 6px;
+}
+
+.hp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff0000, #ffaa00, #00ff00);
+    transition: width 0.5s ease;
+    border-radius: 6px;
+}
+
+.hp-text {
+    font-size: 1rem;
+    color: #aaa;
+    text-align: center;
+}
+
+/* 護盾條 */
+.shield-bar-container {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.shield-bar {
+    width: 100%;
+    height: 10px;
+    background: rgba(102, 204, 255, 0.2);
+    border-radius: 5px;
+    overflow: hidden;
+    border: 1px solid rgba(102, 204, 255, 0.4);
+}
+
+.shield-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #66ccff, #00ffff);
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(102, 204, 255, 0.6);
+    transition: width 0.5s ease;
+}
+
+/* 機率判定彈窗 */
+.probability-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s;
+}
+
+.probability-modal.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.probability-content {
+    background: var(--card-bg);
+    border: 3px solid var(--accent-cyan);
+    border-radius: 15px;
+    padding: 30px;
+    min-width: 400px;
+    text-align: center;
+    box-shadow: 0 0 50px rgba(0, 255, 255, 0.6);
+}
+
+.probability-content h3 {
+    color: var(--accent-cyan);
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+    text-shadow: 0 0 15px var(--accent-cyan);
+}
+
+.probability-text {
+    font-size: 1.2rem;
+    color: #fff;
+    margin-bottom: 20px;
+}
+
+.probability-bar {
+    width: 100%;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    position: relative;
+    overflow: visible;
+    margin: 20px 0;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.probability-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-cyan), var(--accent-magenta));
+    border-radius: 8px;
+    transition: width 0.05s linear;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
+}
+
+.probability-marker {
+    position: absolute;
+    top: -10px;
+    transform: translateX(-50%);
+    z-index: 10;
+}
+
+.marker-line {
+    width: 3px;
+    height: 60px;
+    background: #ffff00;
+    box-shadow: 0 0 10px #ffff00;
+    margin: 0 auto;
+}
+
+.marker-text {
+    color: #ffff00;
+    font-size: 0.9rem;
+    font-weight: 900;
+    margin-top: 5px;
+    text-shadow: 0 0 10px #ffff00;
+}
+
+.probability-result {
+    margin-top: 20px;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-hint {
+    text-align: center;
+    color: var(--accent-cyan);
+    font-size: 1rem;
+    margin-top: auto;
+    opacity: 0.8;
+}
+
+/* 中央區域 */
+.center-area {
+    flex-shrink: 0;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.vs-text {
+    font-size: 2rem;
+    text-align: center;
+    color: var(--accent-magenta);
+    text-shadow: 0 0 15px var(--accent-magenta);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.7;
+        transform: scale(1.05);
+    }
+}
+
+.battle-log {
+    height: 80px;
+    overflow-y: auto;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 8px;
+    font-size: 0.9rem;
+    color: #ccc;
+    font-family: 'Courier New', monospace;
+}
+
+.log-entry {
+    padding: 3px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.log-entry:last-child {
+    border-bottom: none;
+}
+
+.log-attack {
+    color: #ff6666;
+}
+
+.log-skill {
+    color: #66ccff;
+}
+
+.log-damage {
+    color: #ffaa00;
+}
+
+.log-heal {
+    color: #66ff66;
+}
+
+.log-info {
+    color: #cccccc;
+}
+
+/* 控制按鈕 */
+.action-buttons {
+    display: flex;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.action-btn {
+    flex: 1;
+    padding: 16px;
+    font-size: 1.3rem;
+    font-weight: 700;
+    border: 3px solid;
+    background: rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.attack-btn {
+    border-color: #ff6666;
+    color: #ff6666;
+}
+
+.attack-btn:hover {
+    background: rgba(255, 102, 102, 0.3);
+    box-shadow: 0 0 20px rgba(255, 102, 102, 0.5);
+    transform: translateY(-2px);
+}
+
+.endturn-btn {
+    border-color: #00ff88;
+    color: #00ff88;
+}
+
+.endturn-btn:hover {
+    background: rgba(0, 255, 136, 0.3);
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+    transform: translateY(-2px);
+}
+
+/* 彈窗 */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s;
+}
+
+.modal.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    background: var(--card-bg);
+    border: 3px solid var(--accent-cyan);
+    border-radius: 15px;
+    padding: 25px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 0 50px rgba(0, 255, 255, 0.5);
+}
+
+.modal-content.large {
+    max-width: 800px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal-content h2 {
+    color: var(--accent-cyan);
+    font-size: 1.8rem;
+    text-align: center;
+    text-shadow: 0 0 15px var(--accent-cyan);
+    margin: 0;
+}
+
+.close-btn {
+    background: transparent;
+    border: none;
+    color: var(--accent-magenta);
+    font-size: 2rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-btn:hover {
+    color: #fff;
+    text-shadow: 0 0 10px var(--accent-magenta);
+    transform: rotate(90deg);
+}
+
+.modal-btn {
+    padding: 12px 30px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    background: transparent;
+    border: 2px solid var(--accent-cyan);
+    color: var(--accent-cyan);
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.3s;
+    margin: 6px;
+    width: 100%;
+}
+
+.modal-btn:hover {
+    background: rgba(0, 255, 255, 0.2);
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+}
+
+.modal-btn.secondary {
+    border-color: var(--accent-magenta);
+    color: var(--accent-magenta);
+}
+
+.modal-btn.secondary:hover {
+    background: rgba(255, 0, 255, 0.2);
+    box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+}
+
+.retreat-modal-btn {
+    border-color: #ffaa00;
+    color: #ffaa00;
+    margin-top: 15px;
+}
+
+.retreat-modal-btn:hover {
+    background: rgba(255, 170, 0, 0.2);
+    box-shadow: 0 0 20px rgba(255, 170, 0, 0.5);
+}
+
+/* 技能列表 */
+.skill-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.skill-item-btn {
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px solid var(--accent-cyan);
+    border-radius: 8px;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: left;
+    font-size: 1rem;
+}
+
+.skill-item-btn:hover:not(:disabled) {
+    background: rgba(0, 255, 255, 0.2);
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+    transform: translateX(5px);
+}
+
+.skill-item-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    border-color: #666;
+}
+
+.skill-name {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--accent-cyan);
+}
+
+.skill-cooldown {
+    font-size: 0.9rem;
+    color: #ff6666;
+    margin-left: 10px;
+}
+
+/* 備戰區/手牌卡片 */
+.bench-cards,
+.hand-cards,
+.retreat-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.bench-card,
+.hand-card,
+.retreat-card {
+    background: var(--card-bg);
+    border-radius: 10px;
+    padding: 15px;
+    border: 3px solid;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.bench-card:hover,
+.hand-card:hover,
+.retreat-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+}
+
+.bench-card.rarity-一般,
+.hand-card.rarity-一般,
+.retreat-card.rarity-一般 {
+    border-color: var(--rarity-common);
+}
+
+.bench-card.rarity-稀有,
+.hand-card.rarity-稀有,
+.retreat-card.rarity-稀有 {
+    border-color: var(--rarity-rare);
+}
+
+.bench-card.rarity-史詩,
+.hand-card.rarity-史詩,
+.retreat-card.rarity-史詩 {
+    border-color: var(--rarity-epic);
+}
+
+.bench-card.rarity-傳說,
+.hand-card.rarity-傳說,
+.retreat-card.rarity-傳說 {
+    border-color: var(--rarity-legendary);
+}
+
+.bench-card.rarity-神話,
+.hand-card.rarity-神話,
+.retreat-card.rarity-神話 {
+    border-color: var(--rarity-mythic);
+}
+
+.player-turn-text {
+    font-size: 1.2rem;
+    color: var(--accent-magenta);
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.retreat-hint {
+    font-size: 1.1rem;
+    color: var(--accent-cyan);
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+/* 載入動畫 */
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(0, 255, 255, 0.1);
+    border-top-color: var(--accent-cyan);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* 勝利畫面 */
+.victory-title {
+    font-size: 2.5rem !important;
+    background: linear-gradient(45deg, #ffd700, #ffed4e, #ffd700);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmer 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+
+    0%,
+    100% {
+        filter: brightness(1);
+    }
+
+    50% {
+        filter: brightness(1.5);
+    }
+}
+
+.victory-text {
+    font-size: 1.5rem;
+    color: #fff;
+    margin: 20px 0;
+    text-align: center;
+}
+
+.victory-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 25px;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .game-container {
+        padding: 8px;
+        gap: 8px;
+    }
+
+    .game-header {
+        padding: 8px 12px;
+    }
+
+    .header-btn {
+        padding: 6px 12px;
+        font-size: 0.9rem;
+    }
+
+    .current-turn {
+        font-size: 1.1rem;
+    }
+
+    .round-count {
+        font-size: 0.9rem;
+    }
+
+    .player-name {
+        font-size: 1rem;
+    }
+
+    .hand-count {
+        font-size: 0.9rem;
+    }
+
+    .battle-card-area {
+        min-height: 150px;
+    }
+
+    .card-name {
+        font-size: 1.4rem;
+    }
+
+    .card-stats {
+        font-size: 1.1rem;
+    }
+
+    .vs-text {
+        font-size: 1.5rem;
+    }
+
+    .battle-log {
+        height: 60px;
+        font-size: 0.8rem;
+    }
+
+    .action-btn {
+        padding: 12px;
+        font-size: 1.1rem;
+    }
+
+    .bench-cards,
+    .hand-cards,
+    .retreat-cards {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+
+    .bench-cards,
+    .hand-cards,
+    .retreat-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+}
+
+/* 滾動條 */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--accent-cyan);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-magenta);
+}

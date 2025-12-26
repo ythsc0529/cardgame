@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>雙人卡牌對戰遊戲</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+
+<body>
+    <div class="background-animation"></div>
+
+    <div class="main-container">
+        <h1 class="game-title">
+            <span class="glow">卡牌</span>
+            <span class="glow delay-1">對戰</span>
+            <span class="glow delay-2">競技場</span>
+        </h1>
+
+        <div class="subtitle">雙人戰鬥 | 策略對決</div>
+
+        <div class="button-container">
+            <button class="main-button" id="startGameBtn">
+                <span class="button-glow"></span>
+                <span class="button-text">進入遊戲</span>
+            </button>
+
+            <button class="main-button secondary" id="settingsBtn">
+                <span class="button-glow"></span>
+                <span class="button-text">設定</span>
+            </button>
+        </div>
+
+        <div class="info-section">
+            <div class="info-card">
+                <div class="card-icon">🎴</div>
+                <h3>100+張卡牌</h3>
+                <p>包含神話、傳說、史詩等多種稀有度</p>
+            </div>
+
+            <div class="info-card">
+                <div class="card-icon">⚔️</div>
+                <h3>策略對戰</h3>
+                <p>運用技能與冷卻機制制勝</p>
+            </div>
+
+            <div class="info-card">
+                <div class="card-icon">🎲</div>
+                <h3>隨機抽卡</h3>
+                <p>基於稀有度的抽卡系統</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 設定面板 -->
+    <div class="settings-panel" id="settingsPanel">
+        <div class="settings-content">
+            <h2>遊戲設定</h2>
+            <button class="close-btn" id="closeSettings">✕</button>
+
+            <div class="setting-item">
+                <label for="musicVolume">音樂音量</label>
+                <input type="range" id="musicVolume" min="0" max="100" value="50">
+                <span class="volume-display">50%</span>
+            </div>
+
+            <div class="setting-item">
+                <label for="sfxVolume">音效音量</label>
+                <input type="range" id="sfxVolume" min="0" max="100" value="70">
+                <span class="volume-display">70%</span>
+            </div>
+
+            <div class="setting-item">
+                <label>動畫效果</label>
+                <div class="toggle-switch">
+                    <input type="checkbox" id="animations" checked>
+                    <span class="slider"></span>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <label>稀有度顯示</label>
+                <div class="toggle-switch">
+                    <input type="checkbox" id="showRarity" checked>
+                    <span class="slider"></span>
+                </div>
+            </div>
+
+            <div class="rules-section">
+                <h3>遊戲規則</h3>
+                <ul>
+                    <li>雙方各抽取5張卡牌作為初始手牌</li>
+                    <li>投擲硬幣決定先手順序</li>
+                    <li>選擇1張卡牌放入戰鬥區開始對戰</li>
+                    <li>每回合可以使用1個技能或普攻</li>
+                    <li>撤退可以切換戰鬥區卡牌，但會消耗該回合</li>
+                    <li>當一方沒有任何卡牌時即判定輸掉遊戲</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 開始遊戲按鈕
+        document.getElementById('startGameBtn').addEventListener('click', () => {
+            window.location.href = 'game.html';
+        });
+
+        // 設定按鈕
+        document.getElementById('settingsBtn').addEventListener('click', () => {
+            document.getElementById('settingsPanel').classList.add('active');
+        });
+
+        // 關閉設定
+        document.getElementById('closeSettings').addEventListener('click', () => {
+            document.getElementById('settingsPanel').classList.remove('active');
+        });
+
+        // 音量顯示更新
+        document.getElementById('musicVolume').addEventListener('input', (e) => {
+            e.target.nextElementSibling.textContent = e.target.value + '%';
+            localStorage.setItem('musicVolume', e.target.value);
+        });
+
+        document.getElementById('sfxVolume').addEventListener('input', (e) => {
+            e.target.nextElementSibling.textContent = e.target.value + '%';
+            localStorage.setItem('sfxVolume', e.target.value);
+        });
+
+        // 載入設定
+        window.addEventListener('load', () => {
+            const musicVolume = localStorage.getItem('musicVolume') || 50;
+            const sfxVolume = localStorage.getItem('sfxVolume') || 70;
+
+            document.getElementById('musicVolume').value = musicVolume;
+            document.getElementById('sfxVolume').value = sfxVolume;
+            document.querySelector('#musicVolume + .volume-display').textContent = musicVolume + '%';
+            document.querySelector('#sfxVolume + .volume-display').textContent = sfxVolume + '%';
+        });
+    </script>
+</body>
+
+</html>

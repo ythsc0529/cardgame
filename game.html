@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>卡牌對戰 - 遊戲中</title>
+    <link rel="stylesheet" href="styles/game.css">
+</head>
+
+<body>
+    <div class="game-container">
+        <!-- 遊戲標題欄 -->
+        <div class="game-header">
+            <button class="header-btn" onclick="window.location.href='index.html'">← 返回</button>
+            <div class="turn-info">
+                <div class="current-turn" id="currentTurn">等待開始...</div>
+                <div class="round-count">回合: <span id="roundCount">0</span></div>
+            </div>
+            <button class="header-btn bench-btn" id="showBenchBtn">備戰區</button>
+        </div>
+
+        <!-- 戰鬥主區域 -->
+        <div class="battle-main">
+            <!-- 玩家1區域（左側） -->
+            <div class="player-side player1-side">
+                <div class="player-info">
+                    <span class="player-name">玩家 1</span>
+                    <span class="hand-count">手牌: <span id="p1-hand-count">5</span></span>
+                </div>
+                <div class="battle-card-area" id="p1-battle" data-player="1">
+                    <div class="empty-slot">點擊選擇戰鬥卡</div>
+                </div>
+            </div>
+
+            <!-- 中央VS區域 -->
+            <div class="center-section">
+                <div class="vs-text">⚔️<br>VS<br>⚔️</div>
+                <div class="battle-log" id="battle-log"></div>
+            </div>
+
+            <!-- 玩家2區域（右側） -->
+            <div class="player-side player2-side">
+                <div class="player-info">
+                    <span class="player-name">玩家 2</span>
+                    <span class="hand-count">手牌: <span id="p2-hand-count">5</span></span>
+                </div>
+                <div class="battle-card-area" id="p2-battle" data-player="2">
+                    <div class="empty-slot">點擊選擇戰鬥卡</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 控制按鈕 -->
+        <div class="action-buttons">
+            <button class="action-btn attack-btn" id="attackBtn">普攻</button>
+            <button class="action-btn endturn-btn" id="endTurnBtn">結束回合</button>
+        </div>
+    </div>
+
+    <!-- 備戰區彈窗 -->
+    <div class="modal" id="benchModal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h2 id="benchTitle">玩家 1 - 備戰區</h2>
+                <button class="close-btn"
+                    onclick="document.getElementById('benchModal').classList.remove('active')">✕</button>
+            </div>
+            <div class="bench-cards" id="benchCards"></div>
+        </div>
+    </div>
+
+    <!-- 技能選單彈窗 -->
+    <div class="modal" id="skillModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="skillCardName">技能選單</h2>
+                <button class="close-btn"
+                    onclick="document.getElementById('skillModal').classList.remove('active')">✕</button>
+            </div>
+            <div class="skill-list" id="skillList"></div>
+            <button class="modal-btn retreat-modal-btn" id="retreatModalBtn">撤退（與備戰區交換）</button>
+        </div>
+    </div>
+
+    <!-- 初始化彈窗 -->
+    <div class="modal active" id="initModal">
+        <div class="modal-content">
+            <h2 id="modalTitle">遊戲初始化</h2>
+            <div id="modalBody">
+                <p>正在為雙方玩家抽取卡牌...</p>
+                <div class="loading-spinner"></div>
+            </div>
+            <button class="modal-btn" id="modalBtn" style="display:none;">確認</button>
+        </div>
+    </div>
+
+    <!-- 手牌選擇彈窗 -->
+    <div class="modal" id="handModal">
+        <div class="modal-content large">
+            <h2>選擇戰鬥卡牌</h2>
+            <p class="player-turn-text" id="handPlayerText">玩家 1 - 請選擇一張卡牌放入戰鬥區</p>
+            <div class="hand-cards" id="handCards"></div>
+        </div>
+    </div>
+
+    <!-- 勝利彈窗 -->
+    <div class="modal" id="victoryModal">
+        <div class="modal-content">
+            <h2 class="victory-title">🏆 遊戲結束 🏆</h2>
+            <p class="victory-text" id="victoryText"></p>
+            <div class="victory-buttons">
+                <button class="modal-btn" onclick="location.reload()">再玩一次</button>
+                <button class="modal-btn secondary" onclick="window.location.href='index.html'">返回主頁</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 撤退選擇彈窗 -->
+    <div class="modal" id="retreatModal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h2>選擇要交換的卡牌</h2>
+                <button class="close-btn"
+                    onclick="document.getElementById('retreatModal').classList.remove('active')">✕</button>
+            </div>
+            <p class="retreat-hint">點擊一張備戰區卡牌進行交換</p>
+            <div class="retreat-cards" id="retreatCards"></div>
+        </div>
+    </div>
+
+    <!-- 載入遊戲腳本 - 正確順序 -->
+    <script src="scripts/data.js"></script>
+    <script src="scripts/gacha.js"></script>
+    <script src="scripts/probability.js"></script>
+    <script src="scripts/skills.js"></script>
+    <script src="scripts/game.js"></script>
+    <script src="scripts/card_death.js"></script>
+    <script src="scripts/ui.js"></script>
+</body>
+
+</html>

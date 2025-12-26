@@ -1,0 +1,506 @@
+/* 主頁樣式 - 霓虹美學 */
+
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@400;700;900&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --neon-primary: #00ffff;
+    --neon-secondary: #ff00ff;
+    --neon-accent: #ffff00;
+    --dark-bg: #0a0a0f;
+    --card-bg: rgba(20, 20, 40, 0.8);
+    --glow-intensity: 20px;
+}
+
+body {
+    font-family: 'Noto Sans TC', 'Orbitron', sans-serif;
+    background: var(--dark-bg);
+    color: #fff;
+    overflow-x: hidden;
+    min-height: 100vh;
+}
+
+/* 背景動畫 */
+.background-animation {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(135deg, #0a0a0f 0%, #1a0a2e 50%, #0a0a0f 100%);
+    z-index: -1;
+}
+
+.background-animation::before,
+.background-animation::after {
+    content: '';
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    filter: blur(100px);
+    opacity: 0.3;
+    animation: float 20s ease-in-out infinite;
+}
+
+.background-animation::before {
+    background: radial-gradient(circle, var(--neon-primary) 0%, transparent 70%);
+    top: -100px;
+    left: -100px;
+    animation-delay: 0s;
+}
+
+.background-animation::after {
+    background: radial-gradient(circle, var(--neon-secondary) 0%, transparent 70%);
+    bottom: -100px;
+    right: -100px;
+    animation-delay: -10s;
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    33% {
+        transform: translate(100px, -100px) scale(1.1);
+    }
+
+    66% {
+        transform: translate(-100px, 100px) scale(0.9);
+    }
+}
+
+/* 主容器 */
+.main-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 60px 20px;
+    position: relative;
+    z-index: 1;
+}
+
+/* 遊戲標題 */
+.game-title {
+    font-size: clamp(3rem, 8vw, 6rem);
+    font-weight: 900;
+    text-align: center;
+    margin-bottom: 20px;
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 5px;
+}
+
+.glow {
+    display: inline-block;
+    color: #66d9ef;
+    text-shadow:
+        0 0 5px rgba(102, 217, 239, 0.5),
+        0 0 10px rgba(102, 217, 239, 0.3),
+        0 0 15px rgba(102, 217, 239, 0.2);
+    animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.glow.delay-1 {
+    animation-delay: 0.3s;
+    color: #f092f0;
+    text-shadow:
+        0 0 5px rgba(240, 146, 240, 0.5),
+        0 0 10px rgba(240, 146, 240, 0.3),
+        0 0 15px rgba(240, 146, 240, 0.2);
+}
+
+.glow.delay-2 {
+    animation-delay: 0.6s;
+    color: #e6db74;
+    text-shadow:
+        0 0 5px rgba(230, 219, 116, 0.5),
+        0 0 10px rgba(230, 219, 116, 0.3),
+        0 0 15px rgba(230, 219, 116, 0.2);
+}
+
+@keyframes pulse-glow {
+
+    0%,
+    100% {
+        opacity: 1;
+        filter: brightness(1);
+    }
+
+    50% {
+        opacity: 0.8;
+        filter: brightness(1.2);
+    }
+}
+
+.subtitle {
+    text-align: center;
+    font-size: clamp(1rem, 2vw, 1.5rem);
+    color: #88ccdd;
+    margin-bottom: 60px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+}
+
+/* 按鈕容器 */
+.button-container {
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+    margin-bottom: 80px;
+    flex-wrap: wrap;
+}
+
+/* 主按鈕 */
+.main-button {
+    position: relative;
+    padding: 20px 60px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    font-family: 'Orbitron', sans-serif;
+    background: transparent;
+    border: 3px solid var(--neon-primary);
+    color: var(--neon-primary);
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.main-button.secondary {
+    border-color: var(--neon-secondary);
+    color: var(--neon-secondary);
+}
+
+.main-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, var(--neon-primary), transparent);
+    transition: left 0.5s;
+}
+
+.main-button.secondary::before {
+    background: linear-gradient(90deg, transparent, var(--neon-secondary), transparent);
+}
+
+.main-button:hover::before {
+    left: 100%;
+}
+
+.main-button:hover {
+    box-shadow:
+        0 0 20px var(--neon-primary),
+        inset 0 0 20px rgba(0, 255, 255, 0.2);
+    transform: translateY(-3px);
+}
+
+.main-button.secondary:hover {
+    box-shadow:
+        0 0 20px var(--neon-secondary),
+        inset 0 0 20px rgba(255, 0, 255, 0.2);
+}
+
+.main-button .button-text {
+    position: relative;
+    z-index: 2;
+}
+
+.main-button .button-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0, 255, 255, 0.6), transparent);
+    opacity: 0;
+    transition: all 0.5s;
+}
+
+.main-button:active .button-glow {
+    width: 300px;
+    height: 300px;
+    opacity: 1;
+    transition: all 0s;
+}
+
+/* 信息卡片 */
+.info-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.info-card {
+    background: var(--card-bg);
+    border: 2px solid rgba(0, 255, 255, 0.3);
+    border-radius: 15px;
+    padding: 30px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.info-card:hover {
+    border-color: var(--neon-primary);
+    box-shadow:
+        0 0 30px rgba(0, 255, 255, 0.3),
+        inset 0 0 20px rgba(0, 255, 255, 0.1);
+    transform: translateY(-10px);
+}
+
+.card-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    filter: drop-shadow(0 0 10px var(--neon-primary));
+}
+
+.info-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    color: var(--neon-primary);
+}
+
+.info-card p {
+    color: #aaa;
+    line-height: 1.6;
+}
+
+/* 設定面板 */
+.settings-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.settings-panel.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.settings-content {
+    background: var(--card-bg);
+    border: 3px solid var(--neon-primary);
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 0 50px rgba(0, 255, 255, 0.5);
+}
+
+.settings-content h2 {
+    color: var(--neon-primary);
+    font-size: 2rem;
+    margin-bottom: 30px;
+    text-align: center;
+    text-shadow: 0 0 20px var(--neon-primary);
+}
+
+.close-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: transparent;
+    border: none;
+    color: var(--neon-secondary);
+    font-size: 2rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-btn:hover {
+    color: #fff;
+    text-shadow: 0 0 10px var(--neon-secondary);
+    transform: rotate(90deg);
+}
+
+.setting-item {
+    margin-bottom: 30px;
+}
+
+.setting-item label {
+    display: block;
+    margin-bottom: 10px;
+    color: var(--neon-primary);
+    font-weight: 700;
+}
+
+.setting-item input[type="range"] {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    outline: none;
+    margin-bottom: 5px;
+}
+
+.setting-item input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--neon-primary);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 10px var(--neon-primary);
+}
+
+.volume-display {
+    color: #aaa;
+    font-size: 0.9rem;
+}
+
+/* 切換開關 */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 30px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(0, 255, 255, 0.3);
+    transition: 0.4s;
+    border-radius: 30px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: #aaa;
+    transition: 0.4s;
+    border-radius: 50%;
+}
+
+input:checked+.slider {
+    background-color: rgba(0, 255, 255, 0.2);
+    border-color: var(--neon-primary);
+}
+
+input:checked+.slider:before {
+    transform: translateX(30px);
+    background-color: var(--neon-primary);
+    box-shadow: 0 0 10px var(--neon-primary);
+}
+
+/* 規則區域 */
+.rules-section {
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 2px solid rgba(0, 255, 255, 0.2);
+}
+
+.rules-section h3 {
+    color: var(--neon-accent);
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+}
+
+.rules-section ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.rules-section li {
+    padding: 10px 0;
+    padding-left: 25px;
+    position: relative;
+    color: #ccc;
+    line-height: 1.6;
+}
+
+.rules-section li::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: var(--neon-primary);
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .game-title {
+        font-size: 3rem;
+    }
+
+    .button-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .main-button {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .info-section {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* 滾動條樣式 */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--neon-primary);
+    border-radius: 5px;
+    box-shadow: 0 0 10px var(--neon-primary);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--neon-secondary);
+    box-shadow: 0 0 10px var(--neon-secondary);
+}
