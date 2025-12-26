@@ -39,18 +39,48 @@ function createBattleCardElement(card, player) {
     const hpPercent = Math.max(0, (card.hp / card.maxHp) * 100);
     const shieldValue = card.shield || 0;
 
-    // 獲取玩家狀態以顯示持續傷害
+    // 獲取玩家狀態及卡牌狀態以顯示持續效果和增益
     const playerState = player === 1 ? gameState.player1 : gameState.player2;
     const dotEffects = [];
+    const buffEffects = [];
 
-    if (playerState.poisonTurns && playerState.poisonTurns > 0) {
-        dotEffects.push(`<span style="color:#9d50bb;font-weight:700;">🧪 中毒: ${playerState.poisonDamage}/回合 (${playerState.poisonTurns}回合)</span>`);
+    // 持續傷害 (現在儲存在 card 上)
+    if (card.poisonTurns && card.poisonTurns > 0) {
+        dotEffects.push(`<span style="color:#9d50bb;font-weight:700;">🧪 中毒: ${card.poisonDamage}/回 (${card.poisonTurns}回)</span>`);
     }
-    if (playerState.burnTurns && playerState.burnTurns > 0) {
-        dotEffects.push(`<span style="color:#ff6b35;font-weight:700;">🔥 燃燒: ${playerState.burnDamage}/回合 (${playerState.burnTurns}回合)</span>`);
+    if (card.burnTurns && card.burnTurns > 0) {
+        dotEffects.push(`<span style="color:#ff6b35;font-weight:700;">🔥 燃燒: ${card.burnDamage}/回 (${card.burnTurns}回)</span>`);
     }
-    if (playerState.permanentPoisonDamage && playerState.permanentPoisonDamage > 0) {
-        dotEffects.push(`<span style="color:#50c878;font-weight:700;">⚗️ 持續傷害: ${playerState.permanentPoisonDamage}/回合 (永久)</span>`);
+    if (card.permanentPoisonDamage && card.permanentPoisonDamage > 0) {
+        dotEffects.push(`<span style="color:#50c878;font-weight:700;">⚗️ 劇毒: ${card.permanentPoisonDamage}/回(永久)</span>`);
+    }
+
+    // 負面狀態 (儲存在 playerState)
+    if (playerState.stunned) {
+        buffEffects.push(`<span style="color:#ffff00;font-weight:700;">💫 暈眩</span>`);
+    }
+    if (playerState.sleeping) {
+        buffEffects.push(`<span style="color:#66ccff;font-weight:700;">💤 睡眠</span>`);
+    }
+    if (playerState.disabledUntil > 0) {
+        buffEffects.push(`<span style="color:#ff3333;font-weight:700;">🚫 技能封印(${playerState.disabledUntil})</span>`);
+    }
+
+    // 增益/防禦狀態 (儲存在 card)
+    if (card.atkBoostMultiplier && card.atkBoostTurns > 0) {
+        buffEffects.push(`<span style="color:#ff3333;font-weight:700;">⚔️ 攻擊 x${card.atkBoostMultiplier}</span>`);
+    }
+    if (card.nextAtkMultiplier) {
+        buffEffects.push(`<span style="color:#ff0000;font-weight:700;">蓄勢待發 x${card.nextAtkMultiplier}</span>`);
+    }
+    if (card.damageReduction > 0) {
+        buffEffects.push(`<span style="color:#00ff00;font-weight:700;">🛡 減傷 ${Math.round(card.damageReduction * 100)}%</span>`);
+    }
+    if (card.reflectTurns > 0) {
+        buffEffects.push(`<span style="color:#ff00ff;font-weight:700;">🔄 反彈傷害</span>`);
+    }
+    if (card.immuneOnce) {
+        buffEffects.push(`<span style="color:#ffffff;font-weight:700;">✨ 完全免疫</span>`);
     }
 
     cardDiv.innerHTML = `
@@ -85,9 +115,9 @@ function createBattleCardElement(card, player) {
             </div>
             <div class="hp-text">${Math.round(hpPercent)}%</div>
         </div>
-        ${dotEffects.length > 0 ? `
-        <div style="margin-top:8px;padding:6px;background:rgba(0,0,0,0.4);border-radius:4px;font-size:0.8rem;">
-            ${dotEffects.join('<br>')}
+        ${(dotEffects.length > 0 || buffEffects.length > 0) ? `
+        <div style="margin-top:8px;padding:6px;background:rgba(0,0,0,0.4);border-radius:4px;font-size:0.8rem;line-height:1.4;">
+            ${[...dotEffects, ...buffEffects].join('<br>')}
         </div>
         ` : ''}
         <div class="card-hint">點擊查看技能</div>
@@ -118,35 +148,23 @@ function showSkillMenu(card, player) {
             const skillBtn = document.createElement('button');
             skillBtn.className = 'skill-item-btn';
 
-            const isDisabled = skill.currentCd > 0 || playerState.disabledUntil > 0;
+            const isDisabled = (skill.currentCd && skill.currentCd > 0) || playerState.disabledUntil > 0;
             skillBtn.disabled = isDisabled;
 
             skillBtn.innerHTML = `
                 <div class="skill-name">${skill.name}</div>
-                ${skill.currentCd > 0 ? `<span class="skill-cooldown">冷卻: ${skill.currentCd} 回合</span>` : ''}
+                <span class="skill-cooldown ${skill.currentCd > 0 ? 'active' : ''}">
+                    ${skill.currentCd > 0 ? `冷卻中: ${skill.currentCd} / ${skill.cooldown} 回合` : `冷卻: ${skill.cooldown} 回合`}
+                </span>
             `;
 
             if (!isDisabled) {
                 skillBtn.onclick = () => {
                     modal.classList.remove('active');
-
-                    // 如果技能有機率判定，顯示機率動畫
-                    if (skill.chance && skill.chance < 1) {
-                        showProbabilityRoll(skill.name, skill.chance, (success) => {
-                            if (success) {
-                                useSkill(index);
-                                endTurn();
-                            } else {
-                                addLog(`${skill.name} 判定失敗！`, 'info');
-                                // 技能失敗仍然消耗冷卻
-                                useSkill(index);
-                                endTurn();
-                            }
-                        });
-                    } else {
-                        useSkill(index);
+                    // 執行技能，結束後切換回合
+                    useSkill(index, () => {
                         endTurn();
-                    }
+                    });
                 };
             }
 

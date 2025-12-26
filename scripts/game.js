@@ -105,39 +105,85 @@ function startTurn() {
     if (playerState.battle) {
         let dotDamage = 0;
         const dotEffects = [];
+        const card = playerState.battle;
 
         // 處理中毒
-        if (playerState.poisonTurns && playerState.poisonTurns > 0) {
-            dotDamage += playerState.poisonDamage;
-            dotEffects.push(`中毒${playerState.poisonDamage}`);
-            playerState.poisonTurns--;
-            if (playerState.poisonTurns === 0) {
-                playerState.poisonDamage = 0;
-                addLog(`${playerState.battle.name} 的中毒效果結束`, 'info');
+        if (card.poisonTurns && card.poisonTurns > 0) {
+            dotDamage += card.poisonDamage || 0;
+            dotEffects.push(`中毒${card.poisonDamage}`);
+            card.poisonTurns--;
+            if (card.poisonTurns === 0) {
+                card.poisonDamage = 0;
+                addLog(`${card.name} 的中毒效果結束`, 'info');
             }
         }
 
         // 處理燃燒
-        if (playerState.burnTurns && playerState.burnTurns > 0) {
-            dotDamage += playerState.burnDamage;
-            dotEffects.push(`燃燒${playerState.burnDamage}`);
-            playerState.burnTurns--;
-            if (playerState.burnTurns === 0) {
-                playerState.burnDamage = 0;
-                addLog(`${playerState.battle.name} 的燃燒效果結束`, 'info');
+        if (card.burnTurns && card.burnTurns > 0) {
+            dotDamage += card.burnDamage || 0;
+            dotEffects.push(`燃燒${card.burnDamage}`);
+            card.burnTurns--;
+            if (card.burnTurns === 0) {
+                card.burnDamage = 0;
+                addLog(`${card.name} 的燃燒效果結束`, 'info');
             }
         }
 
         // 處理永久持續傷害
-        if (playerState.permanentPoisonDamage && playerState.permanentPoisonDamage > 0) {
-            dotDamage += playerState.permanentPoisonDamage;
-            dotEffects.push(`持續傷害${playerState.permanentPoisonDamage}`);
+        if (card.permanentPoisonDamage && card.permanentPoisonDamage > 0) {
+            dotDamage += card.permanentPoisonDamage;
+            dotEffects.push(`持續傷害${card.permanentPoisonDamage}`);
         }
 
         // 造成持續傷害
         if (dotDamage > 0) {
-            addLog(`${playerState.battle.name} 受到持續傷害: ${dotEffects.join(', ')} = ${dotDamage}`, 'damage');
+            addLog(`${card.name} 受到持續傷害: ${dotEffects.join(', ')} = ${dotDamage}`, 'damage');
             dealDamage(playerState, dotDamage, currentPlayer === 1 ? 2 : 1, true);
+        }
+
+        // 每回合護盾
+        if (card.shieldPerTurn && card.shieldTurns > 0) {
+            card.shield = (card.shield || 0) + card.shieldPerTurn;
+            card.shieldTurns--;
+            addLog(`${card.name} 獲得回合護盾 +${card.shieldPerTurn}`, 'info');
+        }
+
+        // 攻擊減益更新
+        if (card.atkDebuffTurns && card.atkDebuffTurns > 0) {
+            card.atkDebuffTurns--;
+            if (card.atkDebuffTurns === 0) {
+                card.atk += (card.atkDebuff || 0);
+                card.atkDebuff = 0;
+                addLog(`${card.name} 的攻擊減益已結束`, 'info');
+            }
+        }
+        if (card.atkDebuffFlatTurns && card.atkDebuffFlatTurns > 0) {
+            card.atkDebuffFlatTurns--;
+            if (card.atkDebuffFlatTurns === 0) {
+                card.atk += (card.atkDebuffFlat || 0);
+                card.atkDebuffFlat = 0;
+                addLog(`${card.name} 的固定攻擊減益已結束`, 'info');
+            }
+        }
+
+        // 減傷更新
+        if (card.damageReductionTurns && card.damageReductionTurns > 0) {
+            card.damageReductionTurns--;
+            if (card.damageReductionTurns === 0) {
+                card.damageReduction = 0;
+            }
+        }
+
+        // 睡眠判定
+        if (playerState.sleeping) {
+            if (Math.random() < (playerState.wakeChance || 0.5)) {
+                playerState.sleeping = false;
+                addLog(`${card.name} 從睡眠中醒來！`, 'info');
+            } else {
+                addLog(`${card.name} 正在熟睡中...`, 'info');
+                endTurn();
+                return;
+            }
         }
     }
 
@@ -150,8 +196,12 @@ function startTurn() {
 
     // 檢查暈眩
     if (playerState.stunned) {
-        addLog(`玩家${currentPlayer} 被暈眩，跳過回合！`, 'info');
+        addLog(`玩家${currentPlayer} 的 ${playerState.battle ? playerState.battle.name : ''} 被暈眩，跳過回合！`, 'info');
         playerState.stunned = false;
+        if (playerState.stunnedTurns && playerState.stunnedTurns > 1) {
+            playerState.stunned = true;
+            playerState.stunnedTurns--;
+        }
         endTurn();
         return;
     }
@@ -181,16 +231,17 @@ function processPassiveEffects(player) {
     if (passive.effect === 'max_hp_increase') {
         card.maxHp += passive.value;
         card.hp += passive.value;
-        addLog(`${card.name} 最大生命值增加 ${passive.value}！`, 'heal');
+        addLog(`${card.name} 被動：最大生命值增加 ${passive.value}！`, 'heal');
     }
 
     // 超凡：每回合扣除50點生命值上限，增加10攻
     if (passive.effect === 'hp_to_atk') {
-        if (card.maxHp - passive.hpLoss > 0) {
+        const lossLimit = card.maxHp - 400; // 假設上限扣除800點生命值，這裡簡化邏輯或依據data設定
+        if (card.maxHp > 400) {
             card.maxHp -= passive.hpLoss;
             if (card.hp > card.maxHp) card.hp = card.maxHp;
             card.atk += passive.atkGain;
-            addLog(`${card.name} 犧牲${passive.hpLoss}最大血量，獲得${passive.atkGain}攻擊！`, 'info');
+            addLog(`${card.name} 被動：增加10攻擊，減少50最大生命！`, 'info');
         }
     }
 
@@ -211,30 +262,63 @@ function performAttack() {
 
     let damage = attackerState.battle.atk;
 
+    // 處理攻擊倍率
+    if (attackerState.battle.atkBoostTurns && attackerState.battle.atkBoostTurns > 0) {
+        damage = Math.floor(damage * (attackerState.battle.atkBoostMultiplier || 1));
+        // 倍率不在此處減少，在回合結束或傷害結算後？
+    }
+
+    if (attackerState.battle.nextAtkMultiplier) {
+        damage = Math.floor(damage * attackerState.battle.nextAtkMultiplier);
+        attackerState.battle.nextAtkMultiplier = 0;
+        addLog(`${attackerState.battle.name} 蓄力一擊！`, 'attack');
+    }
+
     // 檢查隨機攻擊被動
     if (attackerState.battle.passive && attackerState.battle.passive.effect === 'random_atk') {
         damage = Math.floor(Math.random() * (attackerState.battle.passive.max - attackerState.battle.passive.min + 1)) + attackerState.battle.passive.min;
-        addLog(`${attackerState.battle.name} 隨機攻擊力：${damage}`, 'info');
+        addLog(`${attackerState.battle.name} 隨機發揮：造成 ${damage} 傷害`, 'info');
     }
 
     addLog(`玩家${attacker} 的 ${attackerState.battle.name} 發動普攻！造成 ${damage} 傷害`, 'attack');
     dealDamage(defenderState, damage, attacker);
 
+    // 處理護盾獲取 (鳳凰技能)
+    if (attackerState.battle.shieldOnHit) {
+        const shieldGained = Math.floor(damage * attackerState.battle.shieldOnHit);
+        attackerState.battle.shield = (attackerState.battle.shield || 0) + shieldGained;
+        attackerState.battle.shieldOnHit = 0;
+        addLog(`${attackerState.battle.name} 從攻擊中獲得 ${shieldGained} 護盾`, 'info');
+    }
+
     // 厭世：攻擊時對自己造成一樣傷害
     if (attackerState.battle.passive && attackerState.battle.passive.effect === 'self_damage_on_attack') {
-        addLog(`${attackerState.battle.name} 的被動觸發：對自己造成 ${damage} 傷害`, 'damage');
+        addLog(`${attackerState.battle.name} 厭世被動：對自己造成等量傷害`, 'damage');
         dealDamage(attackerState, damage, attacker, true);
     }
 
-    // 小吉連續攻擊被動
+    // 小吉/額外攻擊處理
+    let extraAtk = false;
     if (attackerState.battle.passive && attackerState.battle.passive.effect === 'combo_attack') {
         const comboChance = Math.min(99, attackerState.battle.passive.baseChance + (attackerState.battle.comboBonus || 0));
         if (Math.random() * 100 < comboChance) {
-            addLog(`${attackerState.battle.name} 觸發連續攻擊！`, 'attack');
-            setTimeout(() => {
-                dealDamage(defenderState, damage, attacker);
-            }, 500);
+            extraAtk = true;
+            addLog(`${attackerState.battle.name} 觸發連擊！`, 'attack');
         }
+    }
+
+    if (attackerState.battle.extraAttack) {
+        extraAtk = true;
+        attackerState.battle.extraAttack = false;
+        addLog(`${attackerState.battle.name} 獲得額外攻擊機會！`, 'attack');
+    }
+
+    if (extraAtk) {
+        setTimeout(() => {
+            if (attackerState.battle && defenderState.battle) {
+                dealDamage(defenderState, damage, attacker);
+            }
+        }, 500);
     }
 
     updateUI();
@@ -244,41 +328,124 @@ function performAttack() {
 // 造成傷害
 function dealDamage(targetPlayerState, damage, attackerPlayer, isSelf = false) {
     if (!targetPlayerState.battle) return;
+    const card = targetPlayerState.battle;
+    const attackerState = attackerPlayer === 1 ? gameState.player1 : gameState.player2;
 
-    // 檢查護盾
-    if (targetPlayerState.battle.shield && targetPlayerState.battle.shield > 0) {
-        if (targetPlayerState.battle.shield >= damage) {
-            targetPlayerState.battle.shield -= damage;
-            addLog(`護盾抵擋了 ${damage} 點傷害！剩餘護盾：${targetPlayerState.battle.shield}`, 'info');
+    // 檢查免疫
+    if (card.immuneOnce && !isSelf) {
+        card.immuneOnce = false;
+        addLog(`${card.name} 消耗了免疫次數，不受傷害！`, 'info');
+        return;
+    }
+
+    // 檢查閃避
+    if (card.dodgeTurns && card.dodgeTurns > 0 && !isSelf) {
+        if (Math.random() < (card.dodgeChance || 0)) {
+            addLog(`${card.name} 成功閃避了攻擊！`, 'info');
+            card.dodgeTurns--;
             return;
-        } else {
-            damage -= targetPlayerState.battle.shield;
-            addLog(`護盾破碎！還剩 ${damage} 點傷害`, 'damage');
-            targetPlayerState.battle.shield = 0;
+        }
+        card.dodgeTurns--;
+    }
+
+    if (card.dodgeShieldChance && !isSelf) {
+        if (Math.random() < card.dodgeShieldChance) {
+            addLog(`${card.name} 閃避並獲得護盾！`, 'info');
+            card.shield = (card.shield || 0) + (card.dodgeShield || 0);
+            card.dodgeShieldChance = 0;
+            return;
+        }
+        card.dodgeShieldChance = 0;
+    }
+
+    // 檢查閃避被動 (機率型選手/球球)
+    if (card.passive && card.passive.effect === 'dodge_passive' && !isSelf) {
+        if (Math.random() < card.passive.chance) {
+            addLog(`${card.name} 運氣極好，閃避了攻擊！`, 'info');
+            return;
         }
     }
 
-    // 檢查迴避被動
-    if (targetPlayerState.battle.passive && targetPlayerState.battle.passive.effect === 'dodge_passive' && !isSelf) {
-        if (Math.random() < targetPlayerState.battle.passive.chance) {
-            addLog(`${targetPlayerState.battle.name} 閃避了攻擊！`, 'info');
+    // 傷害加成/減免計算
+    let finalDamage = damage;
+
+    if (card.nextDamageIncrease && !isSelf) {
+        finalDamage = Math.floor(finalDamage * (1 + card.nextDamageIncrease));
+        card.nextDamageIncrease = 0;
+    }
+
+    if (card.damageReduction && !isSelf) {
+        finalDamage = Math.floor(finalDamage * (1 - card.damageReduction));
+    }
+
+    if (card.nextDamageReduction && !isSelf) {
+        finalDamage = Math.floor(finalDamage * (1 - card.nextDamageReduction));
+        card.nextDamageReduction = 0;
+    }
+
+    if (card.nextDamageReductionFlat && !isSelf) {
+        finalDamage = Math.max(0, finalDamage - card.nextDamageReductionFlat);
+        card.nextDamageReductionFlat = 0;
+    }
+
+    // 治療轉化 (英國紳士)
+    if (card.healNextDamage && !isSelf) {
+        const healAmt = Math.floor(finalDamage * card.healNextDamage);
+        card.hp = Math.min(card.maxHp, card.hp + healAmt);
+        addLog(`${card.name} 將傷害轉化為 ${healAmt} 點治療！`, 'heal');
+        card.healNextDamage = 0;
+        return;
+    }
+
+    // 反射處理
+    if (card.reflectTurns && card.reflectTurns > 0 && !isSelf) {
+        const reflectDmg = Math.floor(finalDamage * (card.reflectMultiplier || 1));
+        addLog(`${card.name} 反射了 ${reflectDmg} 點傷害！`, 'damage');
+        dealDamage(attackerState, reflectDmg, attackerPlayer === 1 ? 2 : 1, true);
+        card.reflectTurns--;
+    }
+
+    // 傷害轉化為屬性
+    if (card.damageToAtkPercent && !isSelf) {
+        const atkGain = Math.floor(finalDamage * card.damageToAtkPercent);
+        card.atk += atkGain;
+        addLog(`${card.name} 將傷害轉化為 ${atkGain} 點攻擊！`, 'info');
+        card.damageToAtkPercent = 0;
+    }
+
+    if (card.damageToMaxHp && !isSelf) {
+        card.maxHp += finalDamage;
+        card.hp += finalDamage;
+        addLog(`${card.name} 將傷害轉化為最大生命值！`, 'heal');
+        card.damageToMaxHp = false;
+    }
+
+    // 檢查護盾
+    if (card.shield && card.shield > 0) {
+        if (card.shield >= finalDamage) {
+            card.shield -= finalDamage;
+            addLog(`護盾吸收了全部 ${finalDamage} 點傷害！剩餘護盾：${card.shield}`, 'info');
             return;
+        } else {
+            finalDamage -= card.shield;
+            addLog(`護盾吸收了部分傷害，破碎！還剩 ${finalDamage} 點傷害`, 'damage');
+            card.shield = 0;
         }
     }
 
     // 扣血
-    targetPlayerState.battle.hp -= damage;
-    addLog(`${targetPlayerState.battle.name} 受到 ${damage} 點傷害！剩餘HP：${Math.max(0, targetPlayerState.battle.hp)}`, 'damage');
+    card.hp -= finalDamage;
+    addLog(`${card.name} 受到 ${finalDamage} 點傷害！剩餘HP：${Math.max(0, card.hp)}`, 'damage');
 
     // 瘋狗騎士被動：每受到一次攻擊增加10最大生命值
-    if (targetPlayerState.battle.passive && targetPlayerState.battle.passive.effect === 'max_hp_on_hit' && !isSelf) {
-        targetPlayerState.battle.maxHp += targetPlayerState.battle.passive.value;
-        addLog(`${targetPlayerState.battle.name} 最大生命值增加${targetPlayerState.battle.passive.value}！`, 'heal');
+    if (card.passive && card.passive.effect === 'max_hp_on_hit' && !isSelf) {
+        card.maxHp += card.passive.value;
+        addLog(`${card.name} 愈戰愈勇，最大生命值增加 ${card.passive.value}！`, 'heal');
     }
 
     // 檢查死亡
-    if (targetPlayerState.battle.hp <= 0) {
-        handleCardDeath(targetPlayerState, attackerPlayer === 1 ? 2 : 1);
+    if (card.hp <= 0) {
+        handleCardDeath(targetPlayerState, attackerPlayer);
     }
 
     updateUI();
@@ -341,7 +508,7 @@ function handleCardDeath(playerState, killerPlayer) {
 }
 
 // 使用技能
-function useSkill(skillIndex) {
+function useSkill(skillIndex, onComplete) {
     const currentPlayer = gameState.currentPlayer;
     const playerState = currentPlayer === 1 ? gameState.player1 : gameState.player2;
 
@@ -351,8 +518,9 @@ function useSkill(skillIndex) {
     if (!skill) return;
 
     // 檢查冷卻
-    if (skill.currentCd > 0) {
-        addLog(`技能冷卻中！還需 ${skill.currentCd} 回合`, 'info');
+    if (skill.currentCd && skill.currentCd > 0) {
+        addLog(`${skill.name} 冷卻中！還需 ${skill.currentCd} 回合`, 'info');
+        console.log(`[CD Check] Skill: ${skill.name}, CD: ${skill.currentCd}`);
         return;
     }
 
@@ -364,12 +532,16 @@ function useSkill(skillIndex) {
 
     addLog(`玩家${currentPlayer} 使用技能：${skill.name}`, 'skill');
 
-    // 重置冷卻
-    skill.currentCd = skill.cooldown;
+    // 重置冷卻 (優先從 skill.cooldown 讀取，若無則預設為 0)
+    skill.currentCd = parseInt(skill.cooldown) || 0;
+
+    // 立即更新UI顯示冷卻中狀態
+    updateUI();
 
     // 執行技能效果 (從skills.js引入)
-    applySkillEffect(skill, playerState, currentPlayer);
+    applySkillEffect(skill, playerState, currentPlayer, onComplete);
 
+    // 再次確認UI更新及遊戲狀態
     updateUI();
     checkGameOver();
 }

@@ -22,43 +22,35 @@ function handleCardDeath(playerState, killerPlayer) {
 
         // 鳳凰復活（帶機率動畫）
         if (card.passive.effect === 'revive' && !card.passive.used) {
-            if (typeof showProbabilityRoll !== 'undefined') {
-                showProbabilityRoll(`${card.name} 復活判定`, card.passive.chance, (success) => {
-                    if (success) {
-                        card.hp = card.maxHp;
-                        card.passive.used = true;
-                        addLog(`${card.name} 復活了！`, 'heal');
-                        updateUI();
-                    } else {
-                        addLog(`${card.name} 復活失敗`, 'info');
-                        continueCardDeath(playerState);
-                    }
-                });
-                return;
-            } else {
-                // 如果機率系統未載入，直接判定
-                if (Math.random() < card.passive.chance) {
+            showProbabilityRoll(`${card.name} 復活判定`, card.passive.chance, (success) => {
+                if (success) {
                     card.hp = card.maxHp;
                     card.passive.used = true;
                     addLog(`${card.name} 復活了！`, 'heal');
                     updateUI();
-                    return;
+                } else {
+                    addLog(`${card.name} 復活失敗`, 'info');
+                    continueCardDeath(playerState);
                 }
-            }
+            });
+            return;
         }
 
         // 遞減復活機率
         if (card.passive.effect === 'revive_decreasing') {
-            const currentChance = (card.passive.baseChance - card.passive.deathCount) / 100;
-            if (Math.random() < currentChance) {
-                card.hp = card.maxHp;
+            const currentChance = (card.passive.baseChance - (card.passive.deathCount || 0) * 10) / 100;
+            showProbabilityRoll(`${card.name} 轉生判定`, Math.max(0, currentChance), (success) => {
                 card.passive.deathCount = (card.passive.deathCount || 0) + 1;
-                addLog(`${card.name} 復活了！（剩餘機率: ${Math.round(currentChance * 100)}%）`, 'heal');
-                updateUI();
-                return;
-            } else {
-                card.passive.deathCount = (card.passive.deathCount || 0) + 1;
-            }
+                if (success) {
+                    card.hp = card.maxHp;
+                    addLog(`${card.name} 再次復活！（剩餘機率: ${Math.round(Math.max(0, currentChance - 0.1) * 100)}%）`, 'heal');
+                    updateUI();
+                } else {
+                    addLog(`${card.name} 終究還是倒下了`, 'info');
+                    continueCardDeath(playerState);
+                }
+            });
+            return;
         }
     }
 

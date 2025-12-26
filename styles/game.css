@@ -717,8 +717,13 @@ body {
 
 .skill-cooldown {
     font-size: 0.9rem;
-    color: #ff6666;
+    color: rgba(0, 255, 255, 0.6);
     margin-left: 10px;
+}
+
+.skill-cooldown.active {
+    color: #ff6666;
+    font-weight: 700;
 }
 
 /* 備戰區/手牌卡片 */
@@ -942,4 +947,121 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
     background: var(--accent-magenta);
+}
+
+/* 手機版適配 - Mobile Responsiveness */
+@media (max-width: 768px) {
+    body {
+        overflow-y: auto !important;
+        /* 允許手機上下滑動 */
+    }
+
+    .game-container {
+        height: auto !important;
+        min-height: 100vh;
+        padding: 8px;
+        overflow-y: visible !important;
+    }
+
+    .game-header {
+        padding: 8px 12px;
+    }
+
+    .card-name {
+        font-size: 1.4rem;
+    }
+
+    .battle-main {
+        flex-direction: column !important;
+        gap: 15px;
+    }
+
+    .player-side {
+        width: 100% !important;
+    }
+
+    .player1-side {
+        order: 3;
+        /* 玩家1在下 */
+    }
+
+    .player2-side {
+        order: 1;
+        /* 玩家2在上 (對手) */
+    }
+
+    .center-section {
+        width: 100% !important;
+        order: 2;
+        padding: 10px;
+        min-height: auto;
+    }
+
+    .vs-text {
+        font-size: 1.5rem;
+        margin-bottom: 5px;
+    }
+
+    .battle-log {
+        height: 120px;
+        min-height: 100px;
+    }
+
+    .battle-card-area {
+        min-height: 250px;
+        padding: 10px;
+    }
+
+    .battle-card {
+        padding: 12px;
+    }
+
+    .card-stats {
+        font-size: 1.1rem;
+        gap: 12px;
+    }
+
+    .action-buttons {
+        position: sticky;
+        bottom: 8px;
+        background: var(--dark-bg);
+        padding: 10px 0;
+        z-index: 100;
+        margin-top: 10px;
+    }
+
+    .action-btn {
+        padding: 12px;
+        font-size: 1.1rem;
+    }
+
+    /* 彈窗優化 */
+    .modal-content {
+        width: 95% !important;
+        padding: 15px;
+        max-height: 90vh;
+    }
+
+    .modal-content.large {
+        width: 95% !important;
+    }
+
+    .bench-cards,
+    .hand-cards,
+    .retreat-cards {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px;
+    }
+
+    .bench-card,
+    .hand-card,
+    .retreat-card {
+        padding: 10px;
+        font-size: 0.9rem;
+    }
+
+    .probability-content {
+        min-width: 90% !important;
+        padding: 20px;
+    }
 }

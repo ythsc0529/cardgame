@@ -24,9 +24,9 @@ function showProbabilityRoll(skillName, probability, callback) {
     const fill = document.getElementById('probFill');
     let currentPercent = 0;
     let direction = 1;
-    let speed = 5;
+    let speed = 20;
     let iterations = 0;
-    const maxIterations = 30; // 滾動30次
+    const maxIterations = 6; // 滾動6次 (3個來回)
 
     const rollInterval = setInterval(() => {
         currentPercent += speed * direction;
@@ -66,14 +66,14 @@ function showProbabilityRoll(skillName, probability, callback) {
                     fill.style.background = 'linear-gradient(90deg, #ff6666, #ff9999)';
                 }
 
-                // 1秒後關閉並執行回調
+                // 短暫延遲後關閉並執行回調
                 setTimeout(() => {
                     document.body.removeChild(modal);
                     callback(success);
-                }, 1500);
-            }, 500);
+                }, 800);
+            }, 300);
         }
-    }, 50);
+    }, 25);
 }
 
 // 添加到全局作用域
