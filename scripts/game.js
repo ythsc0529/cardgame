@@ -171,6 +171,16 @@ function startTurn() {
             card.damageReductionTurns--;
             if (card.damageReductionTurns === 0) {
                 card.damageReduction = 0;
+                addLog(`${card.name} 的減傷效果結束`, 'info');
+            }
+        }
+
+        // 攻擊倍率更新 (修正 Bug: 此前未扣除回合)
+        if (card.atkBoostTurns && card.atkBoostTurns > 0) {
+            card.atkBoostTurns--;
+            if (card.atkBoostTurns === 0) {
+                card.atkBoostMultiplier = 0;
+                addLog(`${card.name} 的攻擊強化結束`, 'info');
             }
         }
 
