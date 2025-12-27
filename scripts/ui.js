@@ -455,11 +455,32 @@ function createHandCardElement(card) {
     return cardDiv;
 }
 
+// 替換隊列，處理雙方同時死亡的情況
+let replacementQueue = [];
+
 // 顯示卡牌替換選擇（死亡後）
 function showCardReplacementSelection(player) {
+    if (!replacementQueue.includes(player)) {
+        replacementQueue.push(player);
+    }
+
+    // 如果對話框尚未開啟，開始處理隊列
+    const modal = document.getElementById('handModal');
+    if (!modal.classList.contains('active')) {
+        processReplacementQueue();
+    }
+}
+
+// 處理替換隊列
+function processReplacementQueue() {
+    if (replacementQueue.length === 0) return;
+
+    const player = replacementQueue[0];
     const playerState = player === 1 ? gameState.player1 : gameState.player2;
 
     if (playerState.hand.length === 0) {
+        replacementQueue.shift();
+        processReplacementQueue();
         checkGameOver();
         return;
     }
@@ -477,9 +498,20 @@ function showCardReplacementSelection(player) {
             playerState.battle = card;
             playerState.hand.splice(index, 1);
             addLog(`${card.name} 上場戰鬥！`, 'info');
+
             modal.classList.remove('active');
             updateUI();
-            checkGameOver();
+
+            // 從隊列中移除並檢查下一個
+            replacementQueue.shift();
+
+            setTimeout(() => {
+                if (replacementQueue.length > 0) {
+                    processReplacementQueue();
+                } else {
+                    checkGameOver();
+                }
+            }, 300);
         };
         handCards.appendChild(cardDiv);
     });
