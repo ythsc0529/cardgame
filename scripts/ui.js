@@ -314,6 +314,10 @@ function createRetreatCardElement(card, index, player) {
                 <span class="stat-value">${card.atk}</span>
             </div>
         </div>
+        <div class="card-skills">
+            ${card.skills.map(skill => `<div style="font-size:0.85rem;padding:4px;background:rgba(0,0,0,0.3);margin:4px 0;border-radius:4px;color:#00ffff;">${skill.name} (CD:${skill.cooldown})</div>`).join('')}
+        </div>
+        ${card.passive ? `<div style="font-size:0.85rem;color:#ffa500;margin-top:6px;padding:4px;background:rgba(255,165,0,0.1);border-radius:4px;border-left:2px solid #ffa500;">被動: ${card.passive.name}</div>` : ''}
     `;
 
     cardDiv.onclick = () => {
