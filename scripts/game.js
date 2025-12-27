@@ -24,37 +24,46 @@ const gameState = {
 // 初始化遊戲
 function initGame() {
     showModal('initModal');
-    updateModalContent('遊戲初始化', '正在為雙方玩家抽取卡牌...', false);
+    updateModalContent('遊戲準備', `
+        <p>歡迎來到卡牌對戰！</p>
+        <p>點擊下方按鈕開始抽取雙方初始手牌</p>
+        <div style="font-size: 3rem; margin: 20px;">🎴</div>
+    `, true, '點擊抽卡');
 
-    setTimeout(() => {
-        // 雙方各抽5張卡
-        gameState.player1.hand = drawInitialHand();
-        gameState.player2.hand = drawInitialHand();
+    document.getElementById('modalBtn').onclick = () => {
+        // 隱藏按鈕，顯示動畫
+        updateModalContent('正在抽卡', '正在為雙方玩家抽取卡牌...', false);
 
-        updateModalContent('抽卡完成', `
-            <p>玩家1 抽到 ${gameState.player1.hand.length} 張卡牌</p>
-            <p>玩家2 抽到 ${gameState.player2.hand.length} 張卡牌</p>
-            <p class="loading-spinner"></p>
-            <p>投擲硬幣決定先手...</p>
-        `, false);
+        animateInitialDraw(() => {
+            // 動畫結束後正式加入手牌並更新
+            gameState.player1.hand = drawInitialHand();
+            gameState.player2.hand = drawInitialHand();
 
-        setTimeout(() => {
-            // 投擲硬幣
-            const firstPlayer = flipCoin();
-            gameState.firstPlayer = firstPlayer;
-            gameState.currentPlayer = firstPlayer;
+            updateModalContent('抽卡完成', `
+                <p>玩家1 抽到 ${gameState.player1.hand.length} 張卡牌</p>
+                <p>玩家2 抽到 ${gameState.player2.hand.length} 張卡牌</p>
+                <p class="loading-spinner"></p>
+                <p>投擲硬幣決定先手...</p>
+            `, false);
 
-            updateModalContent('先手決定', `
-                <p>🪙 硬幣結果：玩家${firstPlayer} 先手！</p>
-                <p>接下來請雙方選擇初始戰鬥卡牌</p>
-            `, true, '開始選卡');
+            setTimeout(() => {
+                // 投擲硬幣
+                const firstPlayer = flipCoin();
+                gameState.firstPlayer = firstPlayer;
+                gameState.currentPlayer = firstPlayer;
 
-            document.getElementById('modalBtn').onclick = () => {
-                hideModal('initModal');
-                startCardSelection();
-            };
-        }, 2000);
-    }, 1000);
+                updateModalContent('先手決定', `
+                    <p>🪙 硬幣結果：玩家${firstPlayer} 先手！</p>
+                    <p>接下來請雙方選擇初始戰鬥卡牌</p>
+                `, true, '開始選卡');
+
+                document.getElementById('modalBtn').onclick = () => {
+                    hideModal('initModal');
+                    startCardSelection();
+                };
+            }, 1000);
+        });
+    };
 }
 
 // 開始選卡流程
@@ -474,61 +483,7 @@ function dealDamage(targetPlayerState, damage, attackerPlayer, isSelf = false) {
     updateUI();
 }
 
-// 處理卡牌死亡
-function handleCardDeath(playerState, killerPlayer) {
-    const card = playerState.battle;
-    addLog(`${card.name} 被擊敗了！`, 'damage');
-
-    // 死亡被動
-    if (card.passive) {
-        // 死亡抽卡
-        if (card.passive.effect === 'draw_on_death') {
-            for (let i = 0; i < card.passive.value; i++) {
-                const newCard = drawCard();
-                playerState.hand.push(newCard);
-            }
-            addLog(`${card.name} 死亡，抽取了 ${card.passive.value} 張卡`, 'info');
-        }
-
-        // 死亡造成傷害
-        if (card.passive.effect === 'death_damage') {
-            const enemy = killerPlayer === 1 ? gameState.player1 : gameState.player2;
-            dealDamage(enemy, card.passive.value, killerPlayer === 1 ? 2 : 1);
-        }
-
-        // 鳳凰復活
-        if (card.passive.effect === 'revive' && !card.passive.used) {
-            if (Math.random() < card.passive.chance) {
-                card.hp = card.maxHp;
-                card.passive.used = true;
-                addLog(`${card.name} 復活了！`, 'heal');
-                updateUI();
-                return;
-            }
-        }
-    }
-
-    // 移除戰鬥卡
-    playerState.battle = null;
-
-    // 如果有手牌，自動選第一張上場
-    if (playerState.hand.length > 0) {
-        setTimeout(() => {
-            if (playerState.hand.length > 0) {
-                playerState.battle = playerState.hand[0];
-                playerState.hand.splice(0, 1);
-                addLog(`${playerState.battle.name} 上場戰鬥！`, 'info');
-                updateUI();
-            } else {
-                checkGameOver();
-            }
-        }, 1000);
-    } else {
-        checkGameOver();
-    }
-
-    checkGameOver();
-}
+// 處理卡牌死亡已移至 scripts/card_death.js
 
 // 使用技能
 function useSkill(skillIndex, onComplete) {

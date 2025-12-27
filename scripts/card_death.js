@@ -7,11 +7,23 @@ function handleCardDeath(playerState, killerPlayer) {
     if (card.passive) {
         // 死亡抽卡
         if (card.passive.effect === 'draw_on_death') {
-            for (let i = 0; i < card.passive.value; i++) {
-                const newCard = drawCard();
-                playerState.hand.push(newCard);
-            }
-            addLog(`${card.name} 死亡，抽取了 ${card.passive.value} 張卡`, 'info');
+            const playerNum = (playerState === gameState.player1) ? 1 : 2;
+            let drawCount = 0;
+            const drawNextDeathCard = () => {
+                if (drawCount < card.passive.value) {
+                    const newCard = drawCard();
+                    playerState.hand.push(newCard);
+                    revealAndSummon(playerNum, newCard, () => {
+                        drawCount++;
+                        drawNextDeathCard();
+                    });
+                } else {
+                    addLog(`${card.name} 死亡，抽取了 ${card.passive.value} 張卡`, 'info');
+                    continueCardDeath(playerState);
+                }
+            };
+            drawNextDeathCard();
+            return; // 暫停 handleCardDeath，等待抽卡結束
         }
 
         // 死亡造成傷害

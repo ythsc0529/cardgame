@@ -505,17 +505,37 @@ function applySkillEffect(skill, playerState, player, onComplete) {
 
         // ========== 召喚/抽卡 ==========
         case 'draw':
-            for (let i = 0; i < skill.value; i++) {
-                playerState.hand.push(drawCard());
-            }
-            addLog(`抽${skill.value}張牌`, 'info');
+            isAsync = true;
+            let drawCount = 0;
+            const drawOne = () => {
+                if (drawCount < skill.value) {
+                    const drawn = drawCard();
+                    if (drawn) {
+                        playerState.hand.push(drawn);
+                        revealAndSummon(currentPlayer, drawn, () => {
+                            drawCount++;
+                            drawOne();
+                        });
+                    } else {
+                        drawOne();
+                    }
+                } else {
+                    addLog(`抽${skill.value}張牌`, 'info');
+                    done();
+                }
+            };
+            drawOne();
             break;
 
         case 'summon':
             const sc = summonCharacterByName(skill.cardName);
             if (sc) {
+                isAsync = true;
                 playerState.hand.push(sc);
-                addLog(`召喚${skill.cardName}到手牌`, 'info');
+                revealAndSummon(currentPlayer, sc, () => {
+                    addLog(`召喚${skill.cardName}到手牌`, 'info');
+                    done();
+                });
             }
             break;
 
@@ -526,28 +546,52 @@ function applySkillEffect(skill, playerState, player, onComplete) {
                     const sc2 = summonCharacterByName(skill.cardName);
                     if (sc2) {
                         playerState.hand.push(sc2);
-                        addLog(`召喚${skill.cardName}成功`, 'info');
+                        revealAndSummon(currentPlayer, sc2, () => {
+                            addLog(`召喚${skill.cardName}成功`, 'info');
+                            done();
+                        });
+                    } else {
+                        done();
                     }
                 } else {
                     addLog(`召喚失敗`, 'info');
+                    done();
                 }
-                done();
             });
             break;
 
         case 'summon_multiple':
-            for (let i = 0; i < skill.count; i++) {
-                const sc3 = summonCharacterByName(skill.cardName);
-                if (sc3) playerState.hand.push(sc3);
-            }
-            addLog(`召喚${skill.count}隻${skill.cardName}到手牌`, 'info');
+            isAsync = true;
+            let summonCount = 0;
+            const summonOne = () => {
+                if (summonCount < skill.count) {
+                    const sc3 = summonCharacterByName(skill.cardName);
+                    if (sc3) {
+                        playerState.hand.push(sc3);
+                        revealAndSummon(currentPlayer, sc3, () => {
+                            summonCount++;
+                            summonOne();
+                        });
+                    } else {
+                        summonOne();
+                    }
+                } else {
+                    addLog(`召喚${skill.count}隻${skill.cardName}到手牌`, 'info');
+                    done();
+                }
+            };
+            summonOne();
             break;
 
         case 'summon_random_ball':
             const rb = summonRandomBall();
             if (rb) {
+                isAsync = true;
                 playerState.hand.push(rb);
-                addLog(`召喚球類角色${rb.name}`, 'info');
+                revealAndSummon(currentPlayer, rb, () => {
+                    addLog(`召喚球類角色${rb.name}`, 'info');
+                    done();
+                });
             } else {
                 addLog('召喚失敗', 'info');
             }
