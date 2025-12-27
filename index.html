@@ -30,6 +30,19 @@
                 <span class="button-glow"></span>
                 <span class="button-text">設定</span>
             </button>
+
+            <button class="main-button" id="changelogBtn"
+                style="border-color: var(--neon-accent); color: var(--neon-accent);">
+                <span class="button-glow"
+                    style="background: radial-gradient(circle, rgba(255, 255, 0, 0.4), transparent);"></span>
+                <span class="button-text">更新日誌</span>
+            </button>
+
+            <button class="main-button secondary" id="charListBtn" style="border-color: #00ff88; color: #00ff88;">
+                <span class="button-glow"
+                    style="background: radial-gradient(circle, rgba(0, 255, 136, 0.4), transparent);"></span>
+                <span class="button-text">角色列表</span>
+            </button>
         </div>
 
         <div class="info-section">
@@ -101,42 +114,169 @@
         </div>
     </div>
 
+    <!-- 更新日誌面板 -->
+    <div class="settings-panel" id="changelogPanel">
+        <div class="settings-content">
+            <h2>更新日誌</h2>
+            <button class="close-btn" id="closeChangelog">✕</button>
+            <div class="changelog-body" style="line-height:2.5; font-size:1.1rem; color:#ccc;">
+                <p
+                    style="color:var(--neon-accent); font-weight:bold; font-size:1.4rem; border-bottom:1px solid rgba(255,255,0,0.2); margin-bottom:10px;">
+                    版本: beta 2.1</p>
+                <p><span style="color:#00ff88;">🟢 本版增強:</span> (請在此填入內容)</p>
+                <p><span style="color:#ff3333;">🔴 本版削弱:</span> (請在此填入內容)</p>
+                <p><span style="color:#66ccff;">🔵 平衡性調整:</span> (請在此填入內容)</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 角色列表面板 -->
+    <div class="settings-panel" id="charListPanel">
+        <div class="settings-content" style="max-width: 1200px; width: 95%;">
+            <h2>角色圖鑑</h2>
+            <button class="close-btn" id="closeCharList">✕</button>
+            <div id="charListContainer"
+                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; margin-top: 20px;">
+                <!-- 由 JS 動態生成 -->
+            </div>
+        </div>
+    </div>
+
+    <script src="scripts/data.js"></script>
     <script>
-        // 開始遊戲按鈕
-        document.getElementById('startGameBtn').addEventListener('click', () => {
-            window.location.href = 'game.html';
-        });
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("Homepage logic initialized");
 
-        // 設定按鈕
-        document.getElementById('settingsBtn').addEventListener('click', () => {
-            document.getElementById('settingsPanel').classList.add('active');
-        });
+            // Helper to toggle panels
+            const togglePanel = (id, active) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    if (active) el.classList.add('active');
+                    else el.classList.remove('active');
+                } else {
+                    console.error("Panel not found:", id);
+                }
+            };
 
-        // 關閉設定
-        document.getElementById('closeSettings').addEventListener('click', () => {
-            document.getElementById('settingsPanel').classList.remove('active');
-        });
+            // Event Listeners
+            const safeAddListener = (id, type, callback) => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener(type, callback);
+                else console.warn("Element not found for listener:", id);
+            };
 
-        // 音量顯示更新
-        document.getElementById('musicVolume').addEventListener('input', (e) => {
-            e.target.nextElementSibling.textContent = e.target.value + '%';
-            localStorage.setItem('musicVolume', e.target.value);
-        });
+            safeAddListener('startGameBtn', 'click', () => {
+                window.location.href = 'game.html';
+            });
 
-        document.getElementById('sfxVolume').addEventListener('input', (e) => {
-            e.target.nextElementSibling.textContent = e.target.value + '%';
-            localStorage.setItem('sfxVolume', e.target.value);
-        });
+            safeAddListener('settingsBtn', 'click', () => togglePanel('settingsPanel', true));
+            safeAddListener('closeSettings', 'click', () => togglePanel('settingsPanel', false));
 
-        // 載入設定
-        window.addEventListener('load', () => {
+            safeAddListener('changelogBtn', 'click', () => togglePanel('changelogPanel', true));
+            safeAddListener('closeChangelog', 'click', () => togglePanel('changelogPanel', false));
+
+            safeAddListener('charListBtn', 'click', () => {
+                renderCharacterList();
+                togglePanel('charListPanel', true);
+            });
+            safeAddListener('closeCharList', 'click', () => togglePanel('charListPanel', false));
+
+            // Volume Logic
+            const musicInput = document.getElementById('musicVolume');
+            const sfxInput = document.getElementById('sfxVolume');
+
+            if (musicInput) {
+                musicInput.addEventListener('input', (e) => {
+                    const val = e.target.value;
+                    const display = e.target.nextElementSibling;
+                    if (display) display.textContent = val + '%';
+                    localStorage.setItem('musicVolume', val);
+                });
+            }
+
+            if (sfxInput) {
+                sfxInput.addEventListener('input', (e) => {
+                    const val = e.target.value;
+                    const display = e.target.nextElementSibling;
+                    if (display) display.textContent = val + '%';
+                    localStorage.setItem('sfxVolume', val);
+                });
+            }
+
+            // Load saved settings
             const musicVolume = localStorage.getItem('musicVolume') || 50;
             const sfxVolume = localStorage.getItem('sfxVolume') || 70;
 
-            document.getElementById('musicVolume').value = musicVolume;
-            document.getElementById('sfxVolume').value = sfxVolume;
-            document.querySelector('#musicVolume + .volume-display').textContent = musicVolume + '%';
-            document.querySelector('#sfxVolume + .volume-display').textContent = sfxVolume + '%';
+            if (musicInput) {
+                musicInput.value = musicVolume;
+                const display = musicInput.nextElementSibling;
+                if (display) display.textContent = musicVolume + '%';
+            }
+            if (sfxInput) {
+                sfxInput.value = sfxVolume;
+                const display = sfxInput.nextElementSibling;
+                if (display) display.textContent = sfxVolume + '%';
+            }
+
+            // 渲染角色列表
+            function renderCharacterList() {
+                const container = document.getElementById('charListContainer');
+                if (!container || container.children.length > 0) return;
+
+                if (typeof CHARACTERS === 'undefined') {
+                    console.error("CHARACTERS data not loaded!");
+                    return;
+                }
+
+                CHARACTERS.forEach(char => {
+                    const card = document.createElement('div');
+                    card.style.cssText = `
+                        background: rgba(255,255,255,0.05);
+                        border: 1px solid rgba(255,255,255,0.1);
+                        border-radius: 10px;
+                        padding: 15px;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 10px;
+                    `;
+
+                    const rarityColors = {
+                        '一般': '#808080',
+                        '稀有': '#00b0f0',
+                        '史詩': '#9900ff',
+                        '傳裝': '#ffc000',
+                        '傳說': '#ffc000',
+                        '神話': '#ff0000'
+                    };
+                    const rColor = rarityColors[char.rarity] || '#fff';
+
+                    card.innerHTML = `
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-weight:bold; font-size:1.2rem; color:#fff;">${char.name}</span>
+                            <span style="background:${rColor}; color:#fff; padding:2px 8px; border-radius:4px; font-size:0.8rem;">${char.rarity}</span>
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; font-size:0.9rem; color:#aaa;">
+                            <span>HP: ${char.hp}</span>
+                            <span>ATK: ${char.atk}</span>
+                        </div>
+                        <div style="border-top:1px solid rgba(255,255,255,0.1); padding-top:10px;">
+                            <div style="color:var(--neon-primary); font-size:0.85rem; font-weight:bold; margin-bottom:5px;">技能:</div>
+                            ${char.skills.map(s => `
+                                <div style="font-size:0.8rem; background:rgba(0,0,0,0.3); padding:4px 8px; border-radius:4px; margin-bottom:4px;">
+                                    <span style="color:#fff;">${s.name}</span> <span style="color:#aaa;">(CD:${s.cooldown || 0})</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        ${char.passive ? `
+                            <div style="border-top:1px solid rgba(255,255,255,0.1); padding-top:10px;">
+                                <div style="color:var(--neon-secondary); font-size:0.85rem; font-weight:bold; margin-bottom:5px;">被動:</div>
+                                <div style="font-size:0.8rem; color:#ccc;">${char.passive.name}</div>
+                            </div>
+                        ` : ''}
+                    `;
+                    container.appendChild(card);
+                });
+            }
         });
     </script>
 </body>

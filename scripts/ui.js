@@ -55,15 +55,23 @@ function createBattleCardElement(card, player) {
         dotEffects.push(`<span style="color:#50c878;font-weight:700;">⚗️ 劇毒: ${card.permanentPoisonDamage}/回(永久)</span>`);
     }
 
-    // 負面狀態 (儲存在 playerState)
-    if (playerState.stunned) {
-        buffEffects.push(`<span style="color:#ffff00;font-weight:700;">💫 暈眩</span>`);
+    // 負面狀態 (現在儲存在 card)
+    if (card.stunned) {
+        buffEffects.push(`<span style="color:#ffff00;font-weight:700;">💫 暈眩 (${card.stunnedTurns || 1})</span>`);
     }
-    if (playerState.sleeping) {
+    if (card.sleeping) {
         buffEffects.push(`<span style="color:#66ccff;font-weight:700;">💤 睡眠</span>`);
     }
-    if (playerState.disabledUntil > 0) {
-        buffEffects.push(`<span style="color:#ff3333;font-weight:700;">🚫 技能封印(${playerState.disabledUntil})</span>`);
+    if (card.disabledUntil > 0) {
+        buffEffects.push(`<span style="color:#ff3333;font-weight:700;">🚫 技能封印(${card.disabledUntil})</span>`);
+    }
+
+    // 攻擊減益效果
+    if (card.atkDebuffTurns > 0) {
+        buffEffects.push(`<span style="color:#ffae42;font-weight:700;">📉 攻擊降低 -${Math.round(card.atkDebuff)} (${card.atkDebuffTurns})</span>`);
+    }
+    if (card.atkDebuffFlatTurns > 0) {
+        buffEffects.push(`<span style="color:#ffae42;font-weight:700;">📉 固定攻擊降低 -${card.atkDebuffFlat} (${card.atkDebuffFlatTurns})</span>`);
     }
 
     // 增益/防禦狀態 (儲存在 card)
@@ -76,11 +84,23 @@ function createBattleCardElement(card, player) {
     if (card.damageReduction > 0) {
         buffEffects.push(`<span style="color:#00ff00;font-weight:700;">🛡 減傷 ${Math.round(card.damageReduction * 100)}%</span>`);
     }
+    if (card.shieldTurns > 0) {
+        buffEffects.push(`<span style="color:#00ffff;font-weight:700;">🛡 能量護盾 +${card.shieldPerTurn}/回 (${card.shieldTurns}回)</span>`);
+    }
     if (card.reflectTurns > 0) {
-        buffEffects.push(`<span style="color:#ff00ff;font-weight:700;">🔄 反彈傷害</span>`);
+        buffEffects.push(`<span style="color:#ff00ff;font-weight:700;">🔄 反彈傷害 (${Math.round(card.reflectMultiplier * 100)}%)</span>`);
     }
     if (card.immuneOnce) {
-        buffEffects.push(`<span style="color:#ffffff;font-weight:700;">✨ 完全免疫</span>`);
+        buffEffects.push(`<span style="color:#ffffff;font-weight:700;">✨ 完全免疫(1次)</span>`);
+    }
+    if (card.nextDamageReduction > 0) {
+        buffEffects.push(`<span style="color:#00ff88;font-weight:700;">🧱 次回減傷 ${Math.round(card.nextDamageReduction * 100)}%</span>`);
+    }
+    if (card.nextDamageReductionFlat > 0) {
+        buffEffects.push(`<span style="color:#00ff88;font-weight:700;">🧱 次回固定減傷 ${card.nextDamageReductionFlat}</span>`);
+    }
+    if (card.dodgeTurns > 0) {
+        buffEffects.push(`<span style="color:#ffffff;font-weight:700;">💨 準備閃避</span>`);
     }
 
     cardDiv.innerHTML = `
@@ -148,7 +168,7 @@ function showSkillMenu(card, player) {
             const skillBtn = document.createElement('button');
             skillBtn.className = 'skill-item-btn';
 
-            const isDisabled = (skill.currentCd && skill.currentCd > 0) || playerState.disabledUntil > 0;
+            const isDisabled = (skill.currentCd && skill.currentCd > 0) || card.disabledUntil > 0;
             skillBtn.disabled = isDisabled;
 
             skillBtn.innerHTML = `

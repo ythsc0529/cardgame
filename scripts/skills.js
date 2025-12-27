@@ -389,32 +389,35 @@ function applySkillEffect(skill, playerState, player, onComplete) {
                 const oldHp = enemy.battle.hp;
                 enemy.battle.hp = Math.min(oldAtk, enemy.battle.maxHp);
                 enemy.battle.atk = oldHp;
-                enemy.stunned = true;
+                enemy.battle.stunned = true;
+                enemy.battle.stunnedTurns = 1;
                 addLog('對手攻守交換並被暈眩！', 'info');
             }
             break;
 
         //========== 狀態異常 ==========
         case 'disable_skill':
-            enemy.disabledUntil = skill.duration || 1;
-            addLog(`對方技能被禁用${skill.duration || 1}回合`, 'info');
+            if (enemy.battle) {
+                enemy.battle.disabledUntil = skill.duration || 1;
+                addLog(`對方 ${enemy.battle.name} 技能被禁用${skill.duration || 1}回合`, 'info');
+            }
             break;
 
         case 'conditional_disable':
             if (skill.condition === 'hp_higher' && enemy.battle && enemy.battle.hp > card.hp) {
-                enemy.disabledUntil = skill.duration;
-                addLog(`對方血量較高，技能被禁用${skill.duration}回合`, 'info');
+                enemy.battle.disabledUntil = skill.duration;
+                addLog(`對方 ${enemy.battle.name} 血量較高，技能被禁用${skill.duration}回合`, 'info');
             }
             break;
 
         case 'stun':
             isAsync = true;
             showProbabilityRoll(skill.name, skill.chance || 1, (success) => {
-                if (success) {
-                    enemy.stunned = true;
-                    enemy.stunnedTurns = skill.duration || 1;
-                    addLog(`對方被暈眩${skill.duration || 1}回合`, 'info');
-                } else {
+                if (success && enemy.battle) {
+                    enemy.battle.stunned = true;
+                    enemy.battle.stunnedTurns = skill.duration || 1;
+                    addLog(`對方 ${enemy.battle.name} 被暈眩${skill.duration || 1}回合`, 'info');
+                } else if (!success) {
                     addLog(`暈眩判定失敗`, 'info');
                 }
                 done();
@@ -424,36 +427,44 @@ function applySkillEffect(skill, playerState, player, onComplete) {
         case 'sleep':
             isAsync = true;
             showProbabilityRoll(skill.name, 1, (success) => {
-                enemy.sleeping = true;
-                enemy.wakeChance = skill.wakeChance || 0.5;
-                addLog('對方進入睡眠狀態', 'info');
+                if (enemy.battle) {
+                    enemy.battle.sleeping = true;
+                    enemy.battle.wakeChance = skill.wakeChance || 0.5;
+                    addLog(`對方 ${enemy.battle.name} 進入睡眠狀態`, 'info');
+                }
                 done();
             });
             break;
 
         case 'poison':
-            enemy.poisonDamage = skill.damage;
-            enemy.poisonTurns = skill.duration || 2;
-            addLog(`對方中毒，每回合${skill.damage}傷害，持續${skill.duration || 2}回合`, 'damage');
+            if (enemy.battle) {
+                enemy.battle.poisonDamage = skill.damage;
+                enemy.battle.poisonTurns = skill.duration || 2;
+                addLog(`對方 ${enemy.battle.name} 中毒，每回合${skill.damage}傷害，持續${skill.duration || 2}回合`, 'damage');
+            }
             break;
 
         case 'poison_percent':
             if (enemy.battle) {
-                enemy.poisonDamage = Math.floor(enemy.battle.maxHp * skill.value);
-                enemy.poisonTurns = skill.duration || 3;
-                addLog(`對方中毒，每回合${enemy.poisonDamage}傷害`, 'damage');
+                enemy.battle.poisonDamage = Math.floor(enemy.battle.maxHp * skill.value);
+                enemy.battle.poisonTurns = skill.duration || 3;
+                addLog(`對方 ${enemy.battle.name} 中毒，每回合${enemy.battle.poisonDamage}傷害`, 'damage');
             }
             break;
 
         case 'permanent_poison':
-            enemy.permanentPoisonDamage = skill.damage;
-            addLog(`對方永久中毒，每回合${skill.damage}傷害`, 'damage');
+            if (enemy.battle) {
+                enemy.battle.permanentPoisonDamage = skill.damage;
+                addLog(`對方 ${enemy.battle.name} 永久中毒，每回合${skill.damage}傷害`, 'damage');
+            }
             break;
 
         case 'burn':
-            enemy.burnDamage = skill.damage || 20;
-            enemy.burnTurns = skill.duration || 3;
-            addLog(`對方燃燒，每回合${skill.damage || 20}傷害`, 'damage');
+            if (enemy.battle) {
+                enemy.battle.burnDamage = skill.damage || 20;
+                enemy.battle.burnTurns = skill.duration || 3;
+                addLog(`對方 ${enemy.battle.name} 燃燒，每回合${skill.damage || 20}傷害`, 'damage');
+            }
             break;
 
         case 'burn_multiplier':
@@ -466,10 +477,16 @@ function applySkillEffect(skill, playerState, player, onComplete) {
         case 'cleanse':
             card.poisonTurns = 0;
             card.burnTurns = 0;
-            playerState.stunned = false;
-            playerState.sleeping = false;
-            playerState.disabledUntil = 0;
-            addLog('解除所有負面效果', 'heal');
+            card.permanentPoisonDamage = 0;
+            card.stunned = false;
+            card.stunnedTurns = 0;
+            card.sleeping = false;
+            card.disabledUntil = 0;
+            card.atkDebuff = 0;
+            card.atkDebuffTurns = 0;
+            card.atkDebuffFlat = 0;
+            card.atkDebuffFlatTurns = 0;
+            addLog(`${card.name} 解除所有負面效果`, 'heal');
             break;
 
         case 'reduce_max_hp':

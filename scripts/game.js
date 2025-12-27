@@ -185,9 +185,9 @@ function startTurn() {
         }
 
         // 睡眠判定
-        if (playerState.sleeping) {
-            if (Math.random() < (playerState.wakeChance || 0.5)) {
-                playerState.sleeping = false;
+        if (card.sleeping) {
+            if (Math.random() < (card.wakeChance || 0.5)) {
+                card.sleeping = false;
                 addLog(`${card.name} 從睡眠中醒來！`, 'info');
             } else {
                 addLog(`${card.name} 正在熟睡中...`, 'info');
@@ -197,28 +197,35 @@ function startTurn() {
         }
     }
 
+    const card = playerState.battle;
+
     // 減少冷卻時間
-    if (playerState.battle && playerState.battle.skills) {
-        playerState.battle.skills.forEach(skill => {
+    if (card && card.skills) {
+        card.skills.forEach(skill => {
             if (skill.currentCd > 0) skill.currentCd--;
         });
     }
 
     // 檢查暈眩
-    if (playerState.stunned) {
-        addLog(`玩家${currentPlayer} 的 ${playerState.battle ? playerState.battle.name : ''} 被暈眩，跳過回合！`, 'info');
-        playerState.stunned = false;
-        if (playerState.stunnedTurns && playerState.stunnedTurns > 1) {
-            playerState.stunned = true;
-            playerState.stunnedTurns--;
+    if (card && card.stunned) {
+        addLog(`玩家${currentPlayer} 的 ${card.name} 被暈眩，跳過回合！`, 'info');
+        // 只有在 stunnedTurns 歸零時才解除
+        if (!card.stunnedTurns || card.stunnedTurns <= 1) {
+            card.stunned = false;
+            card.stunnedTurns = 0;
+        } else {
+            card.stunnedTurns--;
         }
         endTurn();
         return;
     }
 
-    // 檢查技能禁用
-    if (playerState.disabledUntil > 0) {
-        playerState.disabledUntil--;
+    // 檢查技能禁用 (現在在卡牌上)
+    if (card && card.disabledUntil > 0) {
+        card.disabledUntil--;
+        if (card.disabledUntil === 0) {
+            addLog(`${card.name} 的技能封鎖已解除`, 'info');
+        }
     }
 
     // 處理被動效果（每回合觸發）
@@ -535,7 +542,7 @@ function useSkill(skillIndex, onComplete) {
     }
 
     // 檢查技能禁用
-    if (playerState.disabledUntil > 0) {
+    if (playerState.battle.disabledUntil > 0) {
         addLog('技能被禁用中！', 'info');
         return;
     }
