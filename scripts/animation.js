@@ -37,8 +37,8 @@ function animateCardDraw(player, callback) {
                 document.body.removeChild(card);
             }
             if (callback) callback();
-        }, 300);
-    }, 600);
+        }, 150);
+    }, 350);
 }
 
 // 召喚與揭示動畫
@@ -94,12 +94,12 @@ function animateInitialDraw(callback) {
         if (count < 5) {
             animateCardDraw(1, () => {
                 count++;
-                setTimeout(drawNext, 100);
+                setTimeout(drawNext, 50);
             });
         } else if (count < 10) {
             animateCardDraw(2, () => {
                 count++;
-                setTimeout(drawNext, 100);
+                setTimeout(drawNext, 50);
             });
         } else {
             if (callback) callback();

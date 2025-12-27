@@ -215,12 +215,17 @@ function startTurn() {
 
 // 繼續執行回合邏輯 (處理暈眩、冷卻、被動等)
 function proceedTurn(playerState, currentPlayer, card) {
-    // 減少冷卻時間
-    if (card && card.skills) {
-        card.skills.forEach(skill => {
-            if (skill.currentCd > 0) skill.currentCd--;
-        });
-    }
+    // 減少所有卡牌（戰鬥卡與手牌）的冷卻時間
+    const allCards = playerState.hand.slice();
+    if (playerState.battle) allCards.push(playerState.battle);
+
+    allCards.forEach(c => {
+        if (c && c.skills) {
+            c.skills.forEach(skill => {
+                if (skill.currentCd > 0) skill.currentCd--;
+            });
+        }
+    });
 
     // 檢查暈眩
     if (card && card.stunned) {

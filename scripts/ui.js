@@ -198,7 +198,7 @@ function showSkillMenu(card, player) {
 
             if (!isDisabled) {
                 skillBtn.onclick = () => {
-                    modal.classList.remove('active');
+                    hideSkillMenu();
                     // 執行技能，結束後切換回合
                     useSkill(index, () => {
                         endTurn();
@@ -212,6 +212,21 @@ function showSkillMenu(card, player) {
 
     modal.classList.add('active');
 }
+
+// 隱藏技能選單並清除內容，防止「幽靈點擊」
+function hideSkillMenu() {
+    const modal = document.getElementById('skillModal');
+    const skillList = document.getElementById('skillList');
+    modal.classList.remove('active');
+    // 延遲清空，配合 CSS 過渡
+    setTimeout(() => {
+        if (!modal.classList.contains('active')) {
+            skillList.innerHTML = '';
+        }
+    }, 300);
+}
+
+window.hideSkillMenu = hideSkillMenu;
 
 // 顯示備戰區
 function showBench() {
@@ -259,7 +274,10 @@ function createBenchCardElement(card) {
             </div>
         </div>
         <div class="card-skills">
-            ${card.skills.map(s => `<div style="font-size:0.85rem;padding:3px;background:rgba(0,0,0,0.3);margin:2px 0;border-radius:3px;">${s.name}</div>`).join('')}
+            ${card.skills.map(s => {
+        const cdInfo = s.currentCd > 0 ? `<span style="color:#ff6666;"> (${s.currentCd}/${s.cooldown})</span>` : ` (CD:${s.cooldown})`;
+        return `<div style="font-size:0.85rem;padding:3px;background:rgba(0,0,0,0.3);margin:2px 0;border-radius:3px;">${s.name}${cdInfo}</div>`;
+    }).join('')}
         </div>
         ${card.passive ? `<div style="font-size:0.8rem;color:#ffa500;margin-top:6px;padding:4px;background:rgba(255,165,0,0.1);border-radius:3px;">被動: ${card.passive.name}</div>` : ''}
     `;
@@ -315,7 +333,10 @@ function createRetreatCardElement(card, index, player) {
             </div>
         </div>
         <div class="card-skills">
-            ${card.skills.map(skill => `<div style="font-size:0.85rem;padding:4px;background:rgba(0,0,0,0.3);margin:4px 0;border-radius:4px;color:#00ffff;">${skill.name} (CD:${skill.cooldown})</div>`).join('')}
+            ${card.skills.map(skill => {
+        const cdInfo = skill.currentCd > 0 ? `<span style="color:#ff6666;"> (${skill.currentCd}/${skill.cooldown})</span>` : ` (CD:${skill.cooldown})`;
+        return `<div style="font-size:0.85rem;padding:4px;background:rgba(0,0,0,0.3);margin:4px 0;border-radius:4px;color:#00ffff;">${skill.name}${cdInfo}</div>`;
+    }).join('')}
         </div>
         ${card.passive ? `<div style="font-size:0.85rem;color:#ffa500;margin-top:6px;padding:4px;background:rgba(255,165,0,0.1);border-radius:4px;border-left:2px solid #ffa500;">被動: ${card.passive.name}</div>` : ''}
     `;
@@ -451,7 +472,10 @@ function createHandCardElement(card) {
             </div>
         </div>
         <div class="card-skills">
-            ${card.skills.map(skill => `<div style="font-size:0.9rem;padding:5px;background:rgba(0,0,0,0.3);margin:4px 0;border-radius:4px;">${skill.name} (CD:${skill.cooldown})</div>`).join('')}
+            ${card.skills.map(skill => {
+        const cdInfo = skill.currentCd > 0 ? `<span style="color:#ff6666;"> (${skill.currentCd}/${skill.cooldown})</span>` : ` (CD:${skill.cooldown})`;
+        return `<div style="font-size:0.9rem;padding:5px;background:rgba(0,0,0,0.3);margin:4px 0;border-radius:4px;">${skill.name}${cdInfo}</div>`;
+    }).join('')}
         </div>
         ${card.passive ? `<div style="font-size:0.85rem;color:#ffa500;margin-top:8px;padding:6px;background:rgba(255,165,0,0.1);border-radius:4px;">被動: ${card.passive.name}</div>` : ''}
     `;
@@ -531,9 +555,13 @@ document.getElementById('attackBtn').addEventListener('click', () => {
     }
 });
 
-document.getElementById('endTurnBtn').addEventListener('click', () => {
+document.getElementById('surrenderBtn').addEventListener('click', () => {
     if (gameState.gameStarted) {
-        endTurn();
+        if (confirm(`玩家${gameState.currentPlayer} 確定要投降嗎？`)) {
+            const winner = gameState.currentPlayer === 1 ? 2 : 1;
+            addLog(`玩家${gameState.currentPlayer} 選擇了投降`, 'damage');
+            endGame(winner);
+        }
     }
 });
 

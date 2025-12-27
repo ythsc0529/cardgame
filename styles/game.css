@@ -553,14 +553,14 @@ body {
     transform: translateY(-2px);
 }
 
-.endturn-btn {
-    border-color: #00ff88;
-    color: #00ff88;
+.surrender-btn {
+    border-color: #ff9933;
+    color: #ff9933;
 }
 
-.endturn-btn:hover {
-    background: rgba(0, 255, 136, 0.3);
-    box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+.surrender-btn:hover {
+    background: rgba(255, 153, 51, 0.3);
+    box-shadow: 0 0 20px rgba(255, 153, 51, 0.5);
     transform: translateY(-2px);
 }
 
@@ -578,12 +578,14 @@ body {
     z-index: 2000;
     opacity: 0;
     visibility: hidden;
+    pointer-events: none;
     transition: all 0.3s;
 }
 
 .modal.active {
     opacity: 1;
     visibility: visible;
+    pointer-events: auto;
 }
 
 .modal-content {
@@ -1080,7 +1082,7 @@ body {
     align-items: center;
     justify-content: center;
     font-size: 2.5rem;
-    transition: all 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .flying-card::after {
@@ -1102,12 +1104,14 @@ body {
     backdrop-filter: blur(8px);
     opacity: 0;
     visibility: hidden;
+    pointer-events: none;
     transition: all 0.4s;
 }
 
 .reveal-overlay.active {
     opacity: 1;
     visibility: visible;
+    pointer-events: auto;
 }
 
 .reveal-card-container {

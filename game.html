@@ -54,7 +54,7 @@
         <!-- 控制按鈕 -->
         <div class="action-buttons">
             <button class="action-btn attack-btn" id="attackBtn">普攻</button>
-            <button class="action-btn endturn-btn" id="endTurnBtn">結束回合</button>
+            <button class="action-btn surrender-btn" id="surrenderBtn">投降</button>
         </div>
     </div>
 
@@ -75,8 +75,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2 id="skillCardName">技能選單</h2>
-                <button class="close-btn"
-                    onclick="document.getElementById('skillModal').classList.remove('active')">✕</button>
+                <button class="close-btn" onclick="hideSkillMenu()">✕</button>
             </div>
             <div class="skill-list" id="skillList"></div>
             <button class="modal-btn retreat-modal-btn" id="retreatModalBtn">撤退（與備戰區交換）</button>
