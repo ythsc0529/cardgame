@@ -36,8 +36,8 @@ function initGame() {
 
         animateInitialDraw(() => {
             // 動畫結束後正式加入手牌並更新
-            gameState.player1.hand = drawInitialHand();
-            gameState.player2.hand = drawInitialHand();
+            gameState.player1.hand = drawInitialHand(1);
+            gameState.player2.hand = drawInitialHand(2);
 
             updateModalContent('抽卡完成', `
                 <p>玩家1 抽到 ${gameState.player1.hand.length} 張卡牌</p>
@@ -73,6 +73,20 @@ function startCardSelection() {
 
 function selectBattleCardForPlayer(player) {
     const hand = player === 1 ? gameState.player1.hand : gameState.player2.hand;
+
+    // 教學模式：自動為玩家 2 選擇卡牌
+    if (window.Tutorial && window.Tutorial.active && player === 2) {
+        const selectedCard = hand.splice(0, 1)[0];
+        gameState.player2.battle = selectedCard;
+        setTimeout(() => {
+            updateUI();
+            hideModal('handModal');
+            addLog('教學模式：系統已自動為對手選擇戰鬥卡', 'info');
+            startGame();
+        }, 500);
+        return;
+    }
+
     showHandSelection(player, hand, (selectedCard, index) => {
         // 移除手牌
         if (player === 1) {

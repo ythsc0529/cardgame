@@ -1434,3 +1434,98 @@ body {
 .dice.rolling {
     animation: rolling 1s linear infinite;
 }
+
+/* 教學系統樣式 */
+.tutorial-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 9999;
+    pointer-events: none;
+    /* 允許點擊下方的高亮元素 */
+}
+
+.tutorial-box {
+    pointer-events: auto;
+    /* box 內部可以點擊 */
+    position: absolute;
+    background: rgba(20, 20, 30, 0.95);
+    border: 2px solid var(--accent-cyan);
+    box-shadow: 0 0 30px var(--accent-cyan);
+    padding: 25px;
+    border-radius: 15px;
+    max-width: 400px;
+    color: #fff;
+    z-index: 10001;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.tutorial-box h2 {
+    color: var(--accent-cyan);
+    margin-bottom: 10px;
+    font-size: 1.5rem;
+    text-shadow: 0 0 10px var(--accent-cyan);
+}
+
+.tutorial-box p {
+    line-height: 1.6;
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+}
+
+.tutorial-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+}
+
+.tutorial-btn {
+    padding: 10px 20px;
+    background: var(--accent-cyan);
+    border: none;
+    color: #000;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.tutorial-btn:hover {
+    transform: scale(1.05);
+}
+
+.tutorial-btn.secondary {
+    background: transparent;
+    border: 1px solid #666;
+    color: #aaa;
+}
+
+.tutorial-highlight {
+    position: relative;
+    z-index: 10000 !important;
+    pointer-events: auto !important;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5), 0 0 20px 5px var(--accent-cyan) !important;
+    border: 2px solid var(--accent-cyan) !important;
+    transition: box-shadow 0.3s;
+}
+
+@keyframes pulse-highlight {
+    0% {
+        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5), 0 0 20px 5px var(--accent-cyan);
+    }
+
+    50% {
+        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5), 0 0 40px 10px var(--accent-cyan);
+    }
+
+    100% {
+        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5), 0 0 20px 5px var(--accent-cyan);
+    }
+}
+
+.tutorial-highlight {
+    animation: pulse-highlight 2s infinite;
+}

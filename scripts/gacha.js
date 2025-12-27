@@ -100,7 +100,28 @@ function createCardCopy(character) {
 }
 
 // 抽取初始手牌(5張)
-function drawInitialHand() {
+function drawInitialHand(playerNum) {
+    if (window.Tutorial && window.Tutorial.active) {
+        if (playerNum === 2) {
+            // 教學模式：對手（玩家2）使用較弱的卡牌
+            return [
+                summonCharacterByName("足球"),
+                summonCharacterByName("籃球"),
+                summonCharacterByName("排球"),
+                summonCharacterByName("羽球"),
+                summonCharacterByName("撞球")
+            ].filter(c => c !== null);
+        }
+        // 教學模式：玩家（玩家1）提供具代表性的卡牌
+        const tutorialHand = [
+            summonCharacterByName("小吉"),     // 神話 - 累加/被動
+            summonCharacterByName("廚師"),     // 稀有 - 專屬狀態
+            summonCharacterByName("愛因斯坦"), // 史詩 - 隨機數值
+            summonCharacterByName("鳳梨"),     // 史詩 - 機率判定
+            summonCharacterByName("魔眼")      // 神話 - 強力效果
+        ];
+        return tutorialHand.filter(c => c !== null);
+    }
     const hand = [];
     for (let i = 0; i < 5; i++) {
         hand.push(drawCard());
@@ -110,6 +131,7 @@ function drawInitialHand() {
 
 // 投擲硬幣決定先手
 function flipCoin() {
+    if (window.Tutorial && window.Tutorial.active) return 1; // 教學模式固定玩家1先手
     return Math.random() < 0.5 ? 1 : 2;
 }
 

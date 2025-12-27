@@ -26,6 +26,12 @@
                 <span class="button-text">進入遊戲</span>
             </button>
 
+            <button class="main-button" id="tutorialBtn" style="border-color: #ff9900; color: #ff9900;">
+                <span class="button-glow"
+                    style="background: radial-gradient(circle, rgba(255, 153, 0, 0.4), transparent);"></span>
+                <span class="button-text">新手教學</span>
+            </button>
+
             <button class="main-button secondary" id="settingsBtn">
                 <span class="button-glow"></span>
                 <span class="button-text">設定</span>
@@ -167,6 +173,10 @@
 
             safeAddListener('startGameBtn', 'click', () => {
                 window.location.href = 'game.html';
+            });
+
+            safeAddListener('tutorialBtn', 'click', () => {
+                window.location.href = 'game.html?mode=tutorial';
             });
 
             safeAddListener('settingsBtn', 'click', () => togglePanel('settingsPanel', true));
