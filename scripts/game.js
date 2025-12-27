@@ -101,7 +101,7 @@ function startTurn() {
     const currentPlayer = gameState.currentPlayer;
     const playerState = currentPlayer === 1 ? gameState.player1 : gameState.player2;
 
-    // 處理持續傷害 (在回合開始時)
+    // 處理持續效果 (在回合開始時)
     if (playerState.battle) {
         let dotDamage = 0;
         const dotEffects = [];
@@ -175,7 +175,7 @@ function startTurn() {
             }
         }
 
-        // 攻擊倍率更新 (修正 Bug: 此前未扣除回合)
+        // 攻擊倍率更新
         if (card.atkBoostTurns && card.atkBoostTurns > 0) {
             card.atkBoostTurns--;
             if (card.atkBoostTurns === 0) {
@@ -184,21 +184,28 @@ function startTurn() {
             }
         }
 
-        // 睡眠判定
+        // 睡眠判定 (改為非同步動畫)
         if (card.sleeping) {
-            if (Math.random() < (card.wakeChance || 0.5)) {
-                card.sleeping = false;
-                addLog(`${card.name} 從睡眠中醒來！`, 'info');
-            } else {
-                addLog(`${card.name} 正在熟睡中...`, 'info');
-                endTurn();
-                return;
-            }
+            addLog(`正在判定 ${card.name} 是否甦醒...`, 'info');
+            showProbabilityRoll(`${card.name} 甦醒判定`, card.wakeChance || 0.5, (success) => {
+                if (success) {
+                    card.sleeping = false;
+                    addLog(`${card.name} 從睡眠中醒來！`, 'info');
+                    proceedTurn(playerState, currentPlayer, card);
+                } else {
+                    addLog(`${card.name} 正在熟睡中...`, 'info');
+                    endTurn();
+                }
+            });
+            return;
         }
     }
 
-    const card = playerState.battle;
+    proceedTurn(playerState, currentPlayer, playerState.battle);
+}
 
+// 繼續執行回合邏輯 (處理暈眩、冷卻、被動等)
+function proceedTurn(playerState, currentPlayer, card) {
     // 減少冷卻時間
     if (card && card.skills) {
         card.skills.forEach(skill => {
@@ -209,7 +216,6 @@ function startTurn() {
     // 檢查暈眩
     if (card && card.stunned) {
         addLog(`玩家${currentPlayer} 的 ${card.name} 被暈眩，跳過回合！`, 'info');
-        // 只有在 stunnedTurns 歸零時才解除
         if (!card.stunnedTurns || card.stunnedTurns <= 1) {
             card.stunned = false;
             card.stunnedTurns = 0;
@@ -220,7 +226,7 @@ function startTurn() {
         return;
     }
 
-    // 檢查技能禁用 (現在在卡牌上)
+    // 檢查技能禁用
     if (card && card.disabledUntil > 0) {
         card.disabledUntil--;
         if (card.disabledUntil === 0) {
@@ -228,7 +234,7 @@ function startTurn() {
         }
     }
 
-    // 處理被動效果（每回合觸發）
+    // 處理被動效果
     processPassiveEffects(currentPlayer);
 
     updateUI();
