@@ -160,6 +160,24 @@ function showSkillMenu(card, player) {
     cardName.textContent = `${card.name} - 技能選單`;
     skillList.innerHTML = '';
 
+    // 添加被動技能顯示
+    if (card.passive) {
+        const passiveDiv = document.createElement('div');
+        passiveDiv.style.cssText = `
+            background: rgba(255, 165, 0, 0.1);
+            border-left: 4px solid #ffa500;
+            border-radius: 4px;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            text-align: left;
+        `;
+        passiveDiv.innerHTML = `
+            <div style="color: #ffa500; font-weight: bold; font-size: 0.85rem; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 1px;">被動技能</div>
+            <div style="color: #fff; font-size: 0.95rem; font-weight: 500;">${card.passive.name}</div>
+        `;
+        skillList.appendChild(passiveDiv);
+    }
+
     const playerState = player === 1 ? gameState.player1 : gameState.player2;
 
     // 添加技能按鈕
