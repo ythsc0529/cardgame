@@ -76,5 +76,101 @@ function showProbabilityRoll(skillName, probability, callback) {
     }, 25);
 }
 
-// 添加到全局作用域
+// 數值滾動動畫 (用於愛因斯坦等隨機數值)
+function showValueRoll(skillName, min, max, finalValue, callback) {
+    const modal = document.createElement('div');
+    modal.className = 'value-roll-modal';
+    modal.innerHTML = `
+        <div class="value-label">${skillName}</div>
+        <div class="value-display" id="valueNum">0</div>
+        <div style="color:#666; margin-top:20px;">RANDOMIZING...</div>
+    `;
+    document.body.appendChild(modal);
+
+    // 強制重繪
+    modal.offsetHeight;
+    modal.classList.add('active');
+
+    const numDisplay = document.getElementById('valueNum');
+    let startTime = Date.now();
+    const duration = 1500; // 1.5秒
+
+    const animate = () => {
+        const elapsed = Date.now() - startTime;
+        if (elapsed < duration) {
+            // 隨機跳動
+            numDisplay.textContent = Math.floor(Math.random() * (max - min + 1)) + min;
+            requestAnimationFrame(animate);
+        } else {
+            // 顯示最終結果
+            numDisplay.textContent = finalValue;
+            numDisplay.style.color = '#00ff00';
+            numDisplay.style.textShadow = '0 0 30px #00ff00';
+
+            setTimeout(() => {
+                modal.classList.remove('active');
+                setTimeout(() => {
+                    document.body.removeChild(modal);
+                    if (callback) callback();
+                }, 300);
+            }, 1000);
+        }
+    };
+
+    requestAnimationFrame(animate);
+}
+
+// 選項滾動動畫 (用於隨機被動/效果選擇)
+function showOptionRoll(skillName, options, finalIndex, callback) {
+    const modal = document.createElement('div');
+    modal.className = 'value-roll-modal'; // 共用背景
+
+    // 建立重複的選項列表來模擬循環滾動
+    const extendedOptions = [...options, ...options, ...options, ...options, ...options];
+    const itemHeight = 100;
+
+    modal.innerHTML = `
+        <div class="value-label">${skillName}</div>
+        <div class="option-scroll-container">
+            <div class="option-list" id="optionList">
+                ${extendedOptions.map(opt => `<div class="option-item">${opt}</div>`).join('')}
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    modal.offsetHeight;
+    modal.classList.add('active');
+
+    const list = document.getElementById('optionList');
+    const totalItems = extendedOptions.length;
+    // 目標位置：第三組的最終索引
+    const targetIndex = options.length * 2 + finalIndex;
+    const targetOffset = -(targetIndex * itemHeight);
+
+    // 設定初始位置
+    list.style.transform = `translateY(0px)`;
+
+    // 開始滾動動畫
+    setTimeout(() => {
+        list.style.transition = 'transform 2s cubic-bezier(0.1, 0, 0.1, 1)';
+        list.style.transform = `translateY(${targetOffset}px)`;
+
+        setTimeout(() => {
+            const items = list.querySelectorAll('.option-item');
+            items[targetIndex].classList.add('selected');
+
+            setTimeout(() => {
+                modal.classList.remove('active');
+                setTimeout(() => {
+                    document.body.removeChild(modal);
+                    if (callback) callback();
+                }, 300);
+            }, 1200);
+        }, 2200);
+    }, 100);
+}
+
 window.showProbabilityRoll = showProbabilityRoll;
+window.showValueRoll = showValueRoll;
+window.showOptionRoll = showOptionRoll;

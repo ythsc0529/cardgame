@@ -1,5 +1,20 @@
 // UI更新和控制 - 重新設計版本
 
+// 獲取角色特殊狀態 HTML (如食物、蓄力等)
+function getSpecialIndicators(card) {
+    let html = '';
+    if (card.foodCount > 0) {
+        html += `<div style="color:#ffcc00;font-weight:700;margin-top:4px;font-size:0.85rem;">🍱 食物儲備: ${card.foodCount}</div>`;
+    }
+    if (card.chargeCount > 0) {
+        html += `<div style="color:#ff3300;font-weight:700;margin-top:4px;font-size:0.85rem;">⚡ 蓄力層數: ${card.chargeCount}</div>`;
+    }
+    if (card.comboBonus > 0) {
+        html += `<div style="color:#00ff00;font-weight:700;margin-top:4px;font-size:0.85rem;">⚔️ 連擊加成: +${card.comboBonus}%</div>`;
+    }
+    return html;
+}
+
 // 更新整個UI
 function updateUI() {
     updateBattleCards();
@@ -103,6 +118,10 @@ function createBattleCardElement(card, player) {
         buffEffects.push(`<span style="color:#ffffff;font-weight:700;">💨 準備閃避</span>`);
     }
 
+    if (card.dodgeTurns > 0) {
+        buffEffects.push(`<span style="color:#ffffff;font-weight:700;">💨 準備閃避</span>`);
+    }
+
     cardDiv.innerHTML = `
         <div class="card-header">
             <div class="card-name">${card.name}</div>
@@ -118,6 +137,7 @@ function createBattleCardElement(card, player) {
                 <span class="stat-value">${card.atk}</span>
             </div>
         </div>
+        ${getSpecialIndicators(card)}
         ${shieldValue > 0 ? `
         <div class="shield-bar-container">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
@@ -273,6 +293,7 @@ function createBenchCardElement(card) {
                 <span class="stat-value">${card.atk}</span>
             </div>
         </div>
+        ${getSpecialIndicators(card)}
         <div class="card-skills">
             ${card.skills.map(s => {
         const cdInfo = s.currentCd > 0 ? `<span style="color:#ff6666;"> (${s.currentCd}/${s.cooldown})</span>` : ` (CD:${s.cooldown})`;
@@ -332,6 +353,7 @@ function createRetreatCardElement(card, index, player) {
                 <span class="stat-value">${card.atk}</span>
             </div>
         </div>
+        ${getSpecialIndicators(card)}
         <div class="card-skills">
             ${card.skills.map(skill => {
         const cdInfo = skill.currentCd > 0 ? `<span style="color:#ff6666;"> (${skill.currentCd}/${skill.cooldown})</span>` : ` (CD:${skill.cooldown})`;
@@ -471,6 +493,7 @@ function createHandCardElement(card) {
                 <span class="stat-value">${card.atk}</span>
             </div>
         </div>
+        ${getSpecialIndicators(card)}
         <div class="card-skills">
             ${card.skills.map(skill => {
         const cdInfo = skill.currentCd > 0 ? `<span style="color:#ff6666;"> (${skill.currentCd}/${skill.cooldown})</span>` : ` (CD:${skill.cooldown})`;

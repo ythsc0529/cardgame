@@ -112,3 +112,70 @@ function animateInitialDraw(callback) {
 window.animateCardDraw = animateCardDraw;
 window.animateInitialDraw = animateInitialDraw;
 window.revealAndSummon = revealAndSummon;
+
+// 擲骰子動畫
+function showDiceRoll(result, callback) {
+    let overlay = document.querySelector('.dice-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.className = 'dice-overlay';
+        document.body.appendChild(overlay);
+    }
+
+    overlay.innerHTML = `
+        <h2 style="color:var(--accent-cyan); text-shadow:0 0 15px var(--accent-cyan); margin-bottom:20px;">擲骰判定中...</h2>
+        <div class="dice-container">
+            <div class="dice rolling" id="diceElement">
+                <div class="dice-face face-1">1</div>
+                <div class="dice-face face-2">2</div>
+                <div class="dice-face face-3">3</div>
+                <div class="dice-face face-4">4</div>
+                <div class="dice-face face-5">5</div>
+                <div class="dice-face face-6">6</div>
+            </div>
+        </div>
+        <div class="dice-result-text" id="diceResultText"></div>
+    `;
+
+    overlay.classList.add('active');
+
+    const dice = document.getElementById('diceElement');
+    const resultText = document.getElementById('diceResultText');
+
+    // 旋轉對應結果的角度
+    const rotations = {
+        1: { x: 0, y: 0 },
+        2: { x: 0, y: -90 },
+        3: { x: 0, y: -180 },
+        4: { x: 0, y: 90 },
+        5: { x: -90, y: 0 },
+        6: { x: 90, y: 0 }
+    };
+
+    setTimeout(() => {
+        dice.classList.remove('rolling');
+        const rot = rotations[result];
+        // 增加額外圈數讓動畫更自然
+        const extraX = Math.floor(Math.random() * 2 + 1) * 360;
+        const extraY = Math.floor(Math.random() * 2 + 1) * 360;
+        dice.style.transform = `rotateX(${rot.x + extraX}deg) rotateY(${rot.y + extraY}deg)`;
+
+        setTimeout(() => {
+            resultText.textContent = `結果: ${result} 點！`;
+            if (result === 3 || result === 6) {
+                resultText.style.color = '#2ecc71';
+                resultText.style.textShadow = '0 0 20px #2ecc71';
+            }
+
+            setTimeout(() => {
+                overlay.classList.remove('active');
+                setTimeout(() => {
+                    if (callback) callback();
+                }, 300);
+            }, 800);
+        }, 1200);
+    }, 600);
+}
+
+window.showDiceRoll = showDiceRoll;
+

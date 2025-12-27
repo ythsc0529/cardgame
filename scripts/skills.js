@@ -75,12 +75,22 @@ function applySkillEffect(skill, playerState, player, onComplete) {
 
         // ========== 隨機/機率傷害 ==========
         case 'random_damage':
-            dealDamage(enemy, Math.floor(Math.random() * (skill.max - skill.min + 1)) + skill.min, player);
+            isAsync = true;
+            const rdmDmg = Math.floor(Math.random() * (skill.max - skill.min + 1)) + skill.min;
+            showValueRoll(skill.name, skill.min, skill.max, rdmDmg, () => {
+                dealDamage(enemy, rdmDmg, player);
+                done();
+            });
             break;
 
         case 'random_percent_damage':
-            const randPct = Math.random() * (skill.max - skill.min) + skill.min;
-            dealDamage(enemy, Math.floor(card.atk * randPct), player);
+            isAsync = true;
+            const randVal = Math.random() * (skill.max - skill.min) + skill.min;
+            const rdmPctDmg = Math.floor(card.atk * randVal);
+            showValueRoll(skill.name, Math.floor(card.atk * skill.min), Math.floor(card.atk * skill.max), rdmPctDmg, () => {
+                dealDamage(enemy, rdmPctDmg, player);
+                done();
+            });
             break;
 
         case 'chance_damage':
@@ -164,13 +174,17 @@ function applySkillEffect(skill, playerState, player, onComplete) {
             break;
 
         case 'dice_damage':
+            isAsync = true;
             const dice = Math.floor(Math.random() * 6) + 1;
-            addLog(`擲骰子: ${dice}`, 'info');
-            if ((dice === 3 || dice === 6) && enemy.battle) {
-                dealDamage(enemy, Math.floor(enemy.battle.hp / 2), player);
-            } else {
-                addLog('骰子點數未達標，判定失敗', 'info');
-            }
+            showDiceRoll(dice, () => {
+                addLog(`背景擲骰: ${dice}`, 'info');
+                if ((dice === 3 || dice === 6) && enemy.battle) {
+                    dealDamage(enemy, Math.floor(enemy.battle.hp / 2), player);
+                } else {
+                    addLog('骰子點數未達標，判定失敗', 'info');
+                }
+                done();
+            });
             break;
 
         // ========== 犧牲/自殘 ==========
@@ -221,9 +235,13 @@ function applySkillEffect(skill, playerState, player, onComplete) {
             break;
 
         case 'random_heal':
+            isAsync = true;
             const rh = Math.floor(Math.random() * (skill.max - skill.min + 1)) + skill.min;
-            card.hp = Math.max(1, Math.min(card.maxHp, card.hp + rh));
-            addLog(`${rh > 0 ? '恢復' : '扣除'}${Math.abs(rh)}HP`, rh > 0 ? 'heal' : 'damage');
+            showValueRoll(skill.name, skill.min, skill.max, rh, () => {
+                card.hp = Math.max(1, Math.min(card.maxHp, card.hp + rh));
+                addLog(`${rh > 0 ? '恢復' : '扣除'}${Math.abs(rh)}HP`, rh > 0 ? 'heal' : 'damage');
+                done();
+            });
             break;
 
         case 'steal_hp':
@@ -247,9 +265,13 @@ function applySkillEffect(skill, playerState, player, onComplete) {
             break;
 
         case 'random_shield':
+            isAsync = true;
             const rs = Math.floor(Math.random() * (skill.max - skill.min + 1)) + skill.min;
-            card.shield = (card.shield || 0) + rs;
-            addLog(`+${rs}隨機護盾`, 'info');
+            showValueRoll(skill.name, skill.min, skill.max, rs, () => {
+                card.shield = (card.shield || 0) + rs;
+                addLog(`+${rs}隨機護盾`, 'info');
+                done();
+            });
             break;
 
         case 'shield_per_turn':
@@ -640,33 +662,44 @@ function applySkillEffect(skill, playerState, player, onComplete) {
             break;
 
         case 'random_passive':
-            const re = ['攻擊', '血量', '666', '隨便你'][Math.floor(Math.random() * 4)];
-            if (re === '攻擊') {
-                card.atk += 20;
-                addLog('隨機獲得：增加20攻擊力', 'info');
-            } else if (re === '血量') {
-                card.maxHp += 50;
-                card.hp += 50;
-                addLog('隨機獲得：增加50血量', 'heal');
-            } else if (re === '666') {
-                card.extraAttack = true;
-                addLog('隨機獲得：下輪可額外攻擊1次', 'info');
-            } else if (re === '隨便你') {
-                const rc = summonCharacterByName('隨便你');
-                if (rc) {
-                    playerState.hand.push(rc);
-                    addLog('隨機獲得：召喚一隻隨便你', 'info');
+            isAsync = true;
+            const options = ['攻擊', '血量', '666', '隨便你'];
+            const finalIdx = Math.floor(Math.random() * options.length);
+            const re = options[finalIdx];
+            showOptionRoll(skill.name, options, finalIdx, () => {
+                if (re === '攻擊') {
+                    card.atk += 20;
+                    addLog('隨機獲得：增加20攻擊力', 'info');
+                } else if (re === '血量') {
+                    card.maxHp += 50;
+                    card.hp += 50;
+                    addLog('隨機獲得：增加50血量', 'heal');
+                } else if (re === '666') {
+                    card.extraAttack = true;
+                    addLog('隨機獲得：下輪可額外攻擊1次', 'info');
+                } else if (re === '隨便你') {
+                    const rc = summonCharacterByName('隨便你');
+                    if (rc) {
+                        playerState.hand.push(rc);
+                        addLog('隨機獲得：召喚一隻隨便你', 'info');
+                    }
                 }
-            }
+                done();
+            });
             break;
 
         case 'copy_skill':
             isAsync = true;
             if (enemy.battle && enemy.battle.skills && enemy.battle.skills.length > 0) {
-                const cs = enemy.battle.skills[Math.floor(Math.random() * enemy.battle.skills.length)];
-                addLog(`複製: ${cs.name}`, 'info');
-                // 非同步遞迴調用
-                setTimeout(() => applySkillEffect(cs, playerState, player, done), 500);
+                const skillsList = enemy.battle.skills;
+                const skillIdx = Math.floor(Math.random() * skillsList.length);
+                const cs = skillsList[skillIdx];
+
+                showOptionRoll('技能複製', skillsList.map(s => s.name), skillIdx, () => {
+                    addLog(`複製: ${cs.name}`, 'info');
+                    // 非同步遞迴調用
+                    applySkillEffect(cs, playerState, player, done);
+                });
             } else {
                 addLog('對手沒有可複製的技能', 'info');
                 done();
