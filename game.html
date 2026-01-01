@@ -54,6 +54,7 @@
         <!-- 控制按鈕 -->
         <div class="action-buttons">
             <button class="action-btn attack-btn" id="attackBtn">普攻</button>
+            <button class="action-btn log-btn" id="mobileLogBtn" style="display:none;">戰報</button>
             <button class="action-btn surrender-btn" id="surrenderBtn">投降</button>
         </div>
     </div>
@@ -125,6 +126,18 @@
             </div>
             <p class="retreat-hint">點擊一張備戰區卡牌進行交換</p>
             <div class="retreat-cards" id="retreatCards"></div>
+        </div>
+    </div>
+
+    <!-- 戰鬥紀錄彈窗 (手機版用) -->
+    <div class="modal" id="logModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>戰鬥紀錄</h2>
+                <button class="close-btn"
+                    onclick="document.getElementById('logModal').classList.remove('active')">✕</button>
+            </div>
+            <div class="battle-log mobile-log-content" id="mobileLogContent"></div>
         </div>
     </div>
 

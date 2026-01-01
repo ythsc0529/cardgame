@@ -1529,3 +1529,465 @@ body {
 .tutorial-highlight {
     animation: pulse-highlight 2s infinite;
 }
+
+/* --- New Tutorial Styles (Non-intrusive) --- */
+.tutorial-tooltip {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.9);
+    border: 2px solid var(--accent-cyan);
+    border-radius: 8px;
+    padding: 15px;
+    color: #fff;
+    z-index: 10000;
+    width: 280px;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+    pointer-events: none;
+    /* Allow clicks through to the target */
+    transition: all 0.3s ease;
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+.tutorial-tooltip.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    /* Allow clicking buttons inside tooltip */
+}
+
+.tutorial-tooltip::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    /* Arrow positioning will be handled by JS */
+}
+
+.tutorial-highlight-box {
+    position: absolute;
+    border: 3px solid #ffee00;
+    box-shadow: 0 0 15px #ffee00;
+    border-radius: 5px;
+    pointer-events: none;
+    z-index: 9999;
+    animation: highlight-pulse 1.5s infinite;
+}
+
+@keyframes highlight-pulse {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.6;
+        transform: scale(1.05);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.tutorial-next-btn {
+    background: var(--accent-cyan);
+    border: none;
+    color: #000;
+    padding: 5px 15px;
+    border-radius: 4px;
+    margin-top: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    float: right;
+    pointer-events: auto;
+}
+
+/* Update to existing styles - Append to game.css */
+
+/* --- Tutorial Mode Styles --- */
+.tutorial-blocker {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: transparent;
+    z-index: 9998;
+    /* This layer blocks clicks to non-highlighted elements */
+}
+
+.tutorial-highlight {
+    position: relative;
+    z-index: 9999 !important;
+    box-shadow: 0 0 0 5px #ffee00, 0 0 20px #ffee00 !important;
+    animation: pulse-highlight 1.5s infinite;
+    pointer-events: auto !important;
+    /* Ensure it is clickable */
+}
+
+@keyframes pulse-highlight {
+    0% {
+        box-shadow: 0 0 0 5px #ffee00, 0 0 20px #ffee00;
+    }
+
+    50% {
+        box-shadow: 0 0 0 8px #ffaa00, 0 0 30px #ffaa00;
+    }
+
+    100% {
+        box-shadow: 0 0 0 5px #ffee00, 0 0 20px #ffee00;
+    }
+}
+
+.tutorial-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    /* Let clicks pass through, box handles its own events */
+    z-index: 10000;
+}
+
+.tutorial-box {
+    background: rgba(0, 0, 0, 0.9);
+    border: 2px solid var(--accent-cyan);
+    border-radius: 15px;
+    padding: 20px;
+    width: 300px;
+    color: #fff;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+    pointer-events: auto;
+    transition: all 0.3s ease;
+}
+
+.tutorial-box h2 {
+    color: var(--accent-pink);
+    margin-bottom: 10px;
+    font-size: 1.2rem;
+}
+
+.tutorial-footer {
+    margin-top: 15px;
+    text-align: right;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tutorial-btn {
+    background: linear-gradient(45deg, var(--accent-cyan), var(--accent-blue));
+    border: none;
+    padding: 8px 16px;
+    color: #fff;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.tutorial-action-desc {
+    color: #aaa;
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+/* --- Interactive Gacha Styles --- */
+.gacha-pack-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 9000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.5s;
+}
+
+.gacha-pack-overlay.fade-out {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.gacha-pack-container {
+    text-align: center;
+}
+
+.card-pack {
+    width: 200px;
+    height: 300px;
+    background: linear-gradient(135deg, #222, #444);
+    border: 3px solid #ffd700;
+    border-radius: 10px;
+    margin: 30px auto;
+    cursor: pointer;
+    position: relative;
+    box-shadow: 0 0 30px #ffd700;
+    transition: transform 0.2s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.card-pack:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 50px #ffd700;
+}
+
+.card-pack.opening {
+    animation: shake 0.5s ease-in-out infinite;
+}
+
+.pack-label {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #ffd700;
+    transform: rotate(-10deg);
+    border: 2px dashed #ffd700;
+    padding: 5px 10px;
+}
+
+@keyframes shake {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    25% {
+        transform: rotate(5deg);
+    }
+
+    50% {
+        transform: rotate(0deg);
+    }
+
+    75% {
+        transform: rotate(-5deg);
+    }
+
+    100% {
+        transform: rotate(0deg);
+    }
+}
+
+/* --- Improved 3D Coin Toss Styles --- */
+.coin-toss-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 9000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.5s;
+    perspective: 1200px;
+    /* Deep perspective */
+}
+
+.coin-toss-overlay.fade-out {
+    opacity: 0;
+}
+
+.coin-container-3d {
+    width: 200px;
+    height: 200px;
+    margin-bottom: 50px;
+    position: relative;
+    /* Animation handled by JS using .animate() for toss */
+}
+
+.coin-3d {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    transform-style: preserve-3d;
+    /* Rotation handled by JS */
+}
+
+.coin-face-3d {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    /* Hide back face */
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 3rem;
+    font-weight: 900;
+    border: 10px solid #daa520;
+    /* Goldenrod border */
+    box-sizing: border-box;
+    box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.coin-face-3d.heads {
+    background: radial-gradient(circle at 30% 30%, #ffd700, #b8860b);
+    color: #4a3c00;
+    text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.coin-face-3d.tails {
+    background: radial-gradient(circle at 30% 30%, #c0c0c0, #808080);
+    color: #333;
+    transform: rotateY(180deg);
+    text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.4);
+    border-color: #a9a9a9;
+}
+
+/* Side/Edge of the coin (Simulated by pseudo-elements or just thick border) */
+/* For a true 3D cylinder effect, we'd need more faces, but 2 faces + thick border is capable enough for fast spins */
+
+.reveal-hint {
+    color: #00ffff;
+    margin-top: 10px;
+    font-size: 1.2rem;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* --- Slot Machine Styles --- */
+.slot-machine-container {
+    background: #222;
+    padding: 20px;
+    border-radius: 10px;
+    border: 3px solid var(--accent-pink);
+    box-shadow: 0 0 30px var(--accent-pink);
+    text-align: center;
+    width: 300px;
+}
+
+.slot-window {
+    height: 180px;
+    overflow: hidden;
+    position: relative;
+    background: #000;
+    border: 1px solid #444;
+    margin: 20px 0;
+}
+
+.slot-highlight-bar {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    /* Item Height */
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.1);
+    border-top: 2px solid var(--accent-cyan);
+    border-bottom: 2px solid var(--accent-cyan);
+    z-index: 5;
+    pointer-events: none;
+}
+
+.slot-list {
+    /* transform controlled by JS */
+}
+
+.option-item {
+    height: 60px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2rem;
+    color: #666;
+    font-weight: bold;
+}
+
+.option-item.selected {
+    color: #fff;
+    font-size: 1.4rem;
+    text-shadow: 0 0 10px #ff00ff;
+}
+
+/* --- Gacha Flash --- */
+.gacha-flash {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: white;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 9500;
+    transition: opacity 0.5s;
+}
+
+.gacha-flash.active {
+    opacity: 1;
+}
+
+/* --- Mobile Report Modal --- */
+.report-modal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.95);
+    width: 90%;
+    max-height: 80vh;
+    border: 1px solid var(--accent-cyan);
+    z-index: 3000;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.report-modal.active {
+    display: block;
+}
+
+/* --- Mobile Rotation --- */
+.rotate-180 {
+    transform: rotate(180deg);
+    transition: transform 0.5s ease;
+}
+
+/* Turn Active Highlight */
+.player-side.active-turn {
+    box-shadow: 0 0 30px var(--accent-cyan) inset;
+    border: 2px solid var(--accent-cyan);
+    transition: all 0.3s;
+}
+
+/* Mobile specific tweaks */
+@media (max-width: 768px) {
+    .center-section .battle-log {
+        display: none;
+        /* Hide default log on mobile */
+    }
+
+    #mobileLogBtn {
+        display: block !important;
+        /* Show btn */
+    }
+
+    .mobile-log-content {
+        display: block !important;
+        /* Ensure modal log is visible */
+        height: auto;
+        max-height: 60vh;
+    }
+}

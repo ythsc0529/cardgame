@@ -22,6 +22,7 @@ const gameState = {
 };
 
 // 初始化遊戲
+// 初始化遊戲
 function initGame() {
     showModal('initModal');
     updateModalContent('遊戲準備', `
@@ -30,10 +31,20 @@ function initGame() {
         <div style="font-size: 3rem; margin: 20px;">🎴</div>
     `, true, '點擊抽卡');
 
+    // 檢查 URL 參數進入教學模式
+    if (window.Tutorial) {
+        Tutorial.init();
+        if (Tutorial.active) {
+            gameState.player2.name = "訓練師"; // 設定 NPC 名稱
+            gameState.player2.isNPC = true;
+        }
+    }
+
     document.getElementById('modalBtn').onclick = () => {
         // 隱藏按鈕，顯示動畫
         updateModalContent('正在抽卡', '正在為雙方玩家抽取卡牌...', false);
 
+        // 使用新的互動式抽卡
         animateInitialDraw(() => {
             // 動畫結束後正式加入手牌並更新
             gameState.player1.hand = drawInitialHand(1);
@@ -46,21 +57,35 @@ function initGame() {
                 <p>投擲硬幣決定先手...</p>
             `, false);
 
+            // Removed redundant nextStep() here because intro_pack step auto-advances on click.
+            // if (window.Tutorial && window.Tutorial.active) window.Tutorial.nextStep(); 
+
             setTimeout(() => {
-                // 投擲硬幣
-                const firstPlayer = flipCoin();
-                gameState.firstPlayer = firstPlayer;
-                gameState.currentPlayer = firstPlayer;
+                // 投擲硬幣邏輯
+                let firstPlayer = Math.random() < 0.5 ? 1 : 2;
 
-                updateModalContent('先手決定', `
-                    <p>🪙 硬幣結果：玩家${firstPlayer} 先手！</p>
-                    <p>接下來請雙方選擇初始戰鬥卡牌</p>
-                `, true, '開始選卡');
+                // 教學模式強制玩家先手 (為了流程順暢)
+                if (window.Tutorial && window.Tutorial.active) {
+                    firstPlayer = 1;
+                }
 
-                document.getElementById('modalBtn').onclick = () => {
-                    hideModal('initModal');
-                    startCardSelection();
-                };
+                // 播放動畫
+                animateCoinToss(firstPlayer, () => {
+                    gameState.firstPlayer = firstPlayer;
+                    gameState.currentPlayer = firstPlayer;
+
+                    if (window.Tutorial && window.Tutorial.active) window.Tutorial.nextStep(); // 前往 select_card_intro
+
+                    updateModalContent('先手決定', `
+                        <p>🪙 硬幣結果：玩家${firstPlayer} 先手！</p>
+                        <p>接下來請雙方選擇初始戰鬥卡牌</p>
+                    `, true, '開始選卡');
+
+                    document.getElementById('modalBtn').onclick = () => {
+                        hideModal('initModal');
+                        startCardSelection();
+                    };
+                });
             }, 1000);
         });
     };
@@ -123,6 +148,10 @@ function startGame() {
 function startTurn() {
     const currentPlayer = gameState.currentPlayer;
     const playerState = currentPlayer === 1 ? gameState.player1 : gameState.player2;
+
+    // 手機版旋轉畫面
+    updateMobileRotation(currentPlayer);
+    updateActiveTurnIndicator(currentPlayer);
 
     // 處理持續效果 (在回合開始時)
     if (playerState.battle) {
@@ -325,16 +354,36 @@ function performAttack() {
         addLog(`${attackerState.battle.name} 蓄力一擊！`, 'attack');
     }
 
-    // 檢查隨機攻擊被動
+    // 檢查隨機攻擊被動 (Async check)
     if (attackerState.battle.passive && attackerState.battle.passive.effect === 'random_atk') {
-        damage = Math.floor(Math.random() * (attackerState.battle.passive.max - attackerState.battle.passive.min + 1)) + attackerState.battle.passive.min;
-        addLog(`${attackerState.battle.name} 隨機發揮：造成 ${damage} 傷害`, 'info');
+        const min = attackerState.battle.passive.min;
+        const max = attackerState.battle.passive.max;
+        const finalDmg = Math.floor(Math.random() * (max - min + 1)) + min;
+
+        // 使用動畫顯示隨機數值
+        if (typeof showValueRoll === 'function') {
+            showValueRoll(`${attackerState.battle.name} 攻擊判定`, min, max, finalDmg, () => {
+                addLog(`${attackerState.battle.name} 隨機發揮：造成 ${finalDmg} 傷害`, 'info');
+                finalizeAttack(finalDmg, attackerState, defenderState, attacker);
+            });
+        } else {
+            // Fallback without animation if function missing
+            addLog(`${attackerState.battle.name} 隨機發揮：造成 ${finalDmg} 傷害`, 'info');
+            finalizeAttack(finalDmg, attackerState, defenderState, attacker);
+        }
+        return; // Wait for callback
     }
 
+    // Normal path
     addLog(`玩家${attacker} 的 ${attackerState.battle.name} 發動普攻！造成 ${damage} 傷害`, 'attack');
+    finalizeAttack(damage, attackerState, defenderState, attacker);
+}
+
+// 攻擊結算輔助函式
+function finalizeAttack(damage, attackerState, defenderState, attacker) {
     dealDamage(defenderState, damage, attacker);
 
-    // 處理護盾獲取 (鳳凰技能)
+    // 處理護盾獲取
     if (attackerState.battle.shieldOnHit) {
         const shieldGained = Math.floor(damage * attackerState.battle.shieldOnHit);
         attackerState.battle.shield = (attackerState.battle.shield || 0) + shieldGained;
@@ -610,6 +659,26 @@ function endGame(winner) {
     const text = document.getElementById('victoryText');
     text.textContent = `玩家${winner} 獲勝！`;
     modal.classList.add('active');
+}
+
+// 處理手機畫面旋轉
+function updateMobileRotation(currentPlayer) {
+    if (window.innerWidth > 768) return; // 僅限手機
+
+    const container = document.querySelector('.game-container');
+    if (currentPlayer === 2) {
+        container.classList.add('rotate-180');
+    } else {
+        container.classList.remove('rotate-180');
+    }
+}
+
+// 更新活躍回合指示器
+function updateActiveTurnIndicator(currentPlayer) {
+    document.querySelectorAll('.player-side').forEach(el => el.classList.remove('active-turn'));
+    const selector = currentPlayer === 1 ? '.player1-side' : '.player2-side';
+    // 考慮旋轉後，如果是 P2 回合，可能是上面的區域 (player2-side)
+    document.querySelector(selector).classList.add('active-turn');
 }
 
 // 初始化遊戲

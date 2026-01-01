@@ -20,6 +20,9 @@ function updateUI() {
     updateBattleCards();
     updateTurnIndicator();
     updateHandCount();
+    if (typeof updateActiveTurnIndicator === 'function') {
+        updateActiveTurnIndicator(gameState.currentPlayer);
+    }
 }
 
 // 更新戰鬥卡片顯示
@@ -428,6 +431,17 @@ function addLog(message, type = 'info') {
     while (logContainer.children.length > 50) {
         logContainer.removeChild(logContainer.firstChild);
     }
+
+    // 更新手機版日誌
+    const mobileLog = document.getElementById('mobileLogContent');
+    if (mobileLog) {
+        const entry2 = entry.cloneNode(true);
+        mobileLog.appendChild(entry2);
+        mobileLog.scrollTop = mobileLog.scrollHeight;
+        while (mobileLog.children.length > 50) {
+            mobileLog.removeChild(mobileLog.firstChild);
+        }
+    }
 }
 
 // 顯示/隱藏模態框
@@ -597,3 +611,11 @@ document.getElementById('showBenchBtn').addEventListener('click', () => {
 document.getElementById('retreatModalBtn').addEventListener('click', () => {
     showRetreatSelection();
 });
+
+// 手機版戰報按鈕
+const mobileLogBtn = document.getElementById('mobileLogBtn');
+if (mobileLogBtn) {
+    mobileLogBtn.addEventListener('click', () => {
+        document.getElementById('logModal').classList.add('active');
+    });
+}

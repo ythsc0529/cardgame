@@ -1,241 +1,239 @@
-// scripts/tutorial.js
+// 重新設計的新手教學 (Non-intrusive Tooltip Version)
 
 const Tutorial = {
     active: false,
-    currentStep: 0,
-    overlay: null,
+    currentStepIndex: 0,
+    tooltip: null,
+    highlightBox: null,
 
+    // 定義教學步驟
     steps: [
         {
-            id: 'welcome',
-            title: "歡迎來到新手教學",
-            content: "本教學將手把手教您如何遊玩！首先，讓我們為雙方抽取 5 張初始手牌。",
+            id: 'intro',
+            text: "歡迎來到卡牌對戰！我是您的引導員。第一步，請點擊【點擊抽卡】按鈕來抽取初始手牌。",
             target: "#modalBtn",
-            trigger: "click",
-            highlight: "#modalBtn"
+            event: "click",
+            highlight: true
         },
         {
-            id: 'flip_coin',
-            title: "決定出手順序",
-            content: "抽完卡後，我們會投擲硬幣決定誰先開始。這非常關鍵！",
+            id: 'intro_pack',
+            text: "請點擊畫面中央的卡包來開啟它！",
+            target: "#cardPack",
+            event: "click",
+            highlight: true
+        },
+        {
+            id: 'coin_toss_wait',
+            text: "抽卡完成！現在我們需要決定誰先開始。請等待硬幣投擲...",
+            target: "#initModal .modal-content",
+            event: "auto", // 自動等待下一步
+            highlight: false
+        },
+        {
+            id: 'start_select',
+            text: "硬幣結果出爐！現在請點擊【開始選卡】進入手牌選擇。",
             target: "#modalBtn",
-            trigger: "click",
-            highlight: "#modalBtn"
+            event: "click",
+            highlight: true
         },
         {
             id: 'select_card',
-            title: "選擇戰鬥卡",
-            content: "現在輪到您（玩家1）選卡了。從手牌中點擊一張卡牌放入戰鬥區。",
-            target: ".hand-card",
-            trigger: "click",
-            highlight: "#handModal .modal-content"
+            text: "輪到您了！請從下方手牌中點擊一張，將其派遣至戰鬥區。",
+            target: ".hand-card", // 會動態鎖定第一張
+            event: "click",
+            highlight: true
         },
         {
-            id: 'battle_ui',
-            title: "戰鬥介面說明",
-            content: "這是戰鬥主區域。左邊是您的卡片，右邊是對手的。上方可以看到目前回合數。",
-            target: ".battle-main",
-            trigger: "next",
-            highlight: ".battle-main"
+            id: 'battle_ui_intro',
+            text: "戰鬥開始！這是您的戰鬥卡。HP顯示血量，ATK顯示攻擊力。點擊卡牌可以查看詳細技能。",
+            target: "#p1-battle .battle-card",
+            event: "next_btn", // 用按鈕下一步
+            highlight: true
         },
         {
-            id: 'stats',
-            title: "血量與攻擊",
-            content: "卡片上有 HP（血量）和 ATK（攻擊力）。當 HP 歸零時，該卡片就會退場。",
-            target: ".player1-side .battle-card",
-            trigger: "next",
-            highlight: ".player1-side .battle-card"
-        },
-        {
-            id: 'attack',
-            title: "發動攻擊",
-            content: "輪到您的回合時，您可以點擊「普攻」對敵方造成傷害。普攻不需要冷卻時間。",
-            target: "#attackBtn",
-            trigger: "click",
-            highlight: "#attackBtn"
-        },
-        {
-            id: 'skill_menu',
-            title: "技能系統",
-            content: "點擊您的卡面，可以打開技能選單。每個角色都有獨特的強力技能！",
-            target: ".player1-side .battle-card",
-            trigger: "click",
-            highlight: ".player1-side .battle-card"
+            id: 'skill_menu_intro',
+            text: "試著點擊您的戰鬥卡來打開技能選單。",
+            target: "#p1-battle .battle-card",
+            event: "click",
+            highlight: true
         },
         {
             id: 'use_skill',
-            title: "使用技能",
-            content: "在這裡選擇一個技能發動。請注意，技能發動後會進入冷卻（CD）時間。",
-            target: ".skill-item-btn",
-            trigger: "click",
-            highlight: "#skillModal .modal-content"
+            text: "這是技能列表。請點擊一個技能來攻擊對手！(注意：使用技能後會結束回合)",
+            target: ".skill-item-btn:not([disabled])",
+            event: "click",
+            highlight: true
         },
         {
-            id: 'bench',
-            title: "備戰與撤退",
-            content: "如果您想換下受傷的卡片，可以點擊「撤退」。或者點擊右上角的「備戰區」查看您的後續部隊。",
-            target: "#showBenchBtn",
-            trigger: "next",
-            highlight: ".game-header"
-        },
-        {
-            id: 'surrender',
-            title: "結束與投降",
-            content: "如果您覺得無法獲勝，可以使用「投降」。注意：每回合必須行動，不能無故跳過回合。",
-            target: "#surrenderBtn",
-            trigger: "next",
-            highlight: ".action-buttons"
-        },
-        {
-            id: 'finish',
-            title: "教學完成！",
-            content: "您已經掌握了基本操作。準備好開始真正的對決了嗎？",
+            id: 'end_tutorial',
+            text: "恭喜！您已經學會了基本操作。接下來請擊敗對面的訓練師吧！",
             target: null,
-            trigger: "finish",
-            highlight: null
+            event: "finish_btn",
+            highlight: false
         }
     ],
 
+    // 初始化
     init() {
         const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('mode') !== 'tutorial') return;
-
-        console.log("Tutorial Mode Active");
-        this.active = true;
-        this.createOverlay();
-        this.showStep(0);
-
-        // 禁止某些隨機行為以保證教學流暢 (可選)
+        if (urlParams.get('mode') === 'tutorial') {
+            this.active = true;
+            this.createElements();
+            // 延遲一點啟動，確保 DOM 準備好
+            setTimeout(() => this.startStep(0), 500);
+            console.log("Tutorial Mode Initialized");
+        }
     },
 
-    createOverlay() {
-        this.overlay = document.createElement('div');
-        this.overlay.className = 'tutorial-overlay';
-        this.overlay.innerHTML = `
-            <div class="tutorial-box">
-                <h2 id="tutorialTitle"></h2>
-                <div id="tutorialContent"></div>
-                <div class="tutorial-footer">
-                    <button id="tutorialNextBtn" class="tutorial-btn">下一步</button>
-                    <button id="tutorialSkipBtn" class="tutorial-btn secondary">跳過教學</button>
-                </div>
-            </div>
-            <div class="tutorial-arrow"></div>
-        `;
-        document.body.appendChild(this.overlay);
+    // 創建 UI 元素
+    createElements() {
+        // Tooltip
+        this.tooltip = document.createElement('div');
+        this.tooltip.className = 'tutorial-tooltip';
+        document.body.appendChild(this.tooltip);
 
-        document.getElementById('tutorialSkipBtn').onclick = () => this.finish();
-        document.getElementById('tutorialNextBtn').onclick = () => this.nextStep();
+        // Highlight Box
+        this.highlightBox = document.createElement('div');
+        this.highlightBox.className = 'tutorial-highlight-box';
+        document.body.appendChild(this.highlightBox);
     },
 
-    showStep(index) {
+    // 開始指定步驟
+    startStep(index) {
         if (index >= this.steps.length) {
-            this.finish();
+            this.endTutorial();
             return;
         }
 
-        this.currentStep = index;
+        this.currentStepIndex = index;
         const step = this.steps[index];
+        console.log(`Starting Tutorial Step: ${step.id}`);
 
-        document.getElementById('tutorialTitle').innerText = step.title;
-        document.getElementById('tutorialContent').innerText = step.content;
-
-        const nextBtn = document.getElementById('tutorialNextBtn');
-        if (step.trigger === 'next') {
-            nextBtn.style.display = 'block';
-            nextBtn.innerText = "下一步";
-        } else if (step.trigger === 'finish') {
-            nextBtn.style.display = 'block';
-            nextBtn.innerText = "開始正式遊戲";
-            nextBtn.onclick = () => window.location.href = 'game.html';
-        } else {
-            nextBtn.style.display = 'none'; // 等待用戶點擊目標
-        }
-
-        // 移除舊的高亮
-        document.querySelectorAll('.tutorial-highlight').forEach(el => el.classList.remove('tutorial-highlight'));
-
-        // 添加新高亮
-        if (step.highlight) {
-            const el = document.querySelector(step.highlight);
-            if (el) {
-                el.classList.add('tutorial-highlight');
-                this.positionBox(el);
+        // 查找目標元素
+        let targetEl = null;
+        if (step.target) {
+            targetEl = document.querySelector(step.target);
+            // 如果目標是手牌或卡包，可能還沒生成，等待一下
+            if (!targetEl && (step.target === '.hand-card' || step.target === '#cardPack')) {
+                setTimeout(() => this.startStep(index), 200); // Retry
+                return;
             }
+        }
+
+        // 顯示 Tooltip
+        this.showTooltip(step.text, targetEl, step.event);
+
+        // 顯示 Highligh Box
+        if (step.highlight && targetEl) {
+            this.showHighlight(targetEl);
         } else {
-            this.centerBox();
+            this.hideHighlight();
         }
 
-        // 綁定觸發器
-        if (step.trigger === 'click' && step.target) {
-            this.bindTargetTrigger(step.target);
+        // 綁定事件
+        this.bindEvent(step, targetEl);
+    },
+
+    // 顯示 Tooltip
+    showTooltip(text, targetEl, eventType) {
+        this.tooltip.innerHTML = text; // 可以包含 HTML
+
+        // 如果是 next_btn 或 finish_btn，添加按鈕
+        if (eventType === 'next_btn') {
+            const btn = document.createElement('button');
+            btn.className = 'tutorial-next-btn';
+            btn.textContent = '下一步 →';
+            btn.onclick = () => this.nextStep();
+            this.tooltip.appendChild(btn);
+        } else if (eventType === 'finish_btn') {
+            const btn = document.createElement('button');
+            btn.className = 'tutorial-next-btn';
+            btn.textContent = '完成教學';
+            btn.onclick = () => this.endTutorial();
+            this.tooltip.appendChild(btn);
+        }
+
+        this.tooltip.classList.add('visible');
+
+        // 定位
+        if (targetEl) {
+            this.positionTooltip(targetEl);
+        } else {
+            // 中心顯示
+            this.tooltip.style.top = '50%';
+            this.tooltip.style.left = '50%';
+            this.tooltip.style.transform = 'translate(-50%, -50%)';
         }
     },
 
-    bindTargetTrigger(selector) {
-        // 使用事件委託或其他方式監聽，因為有些元素是動態生成的
-        const observer = new MutationObserver((mutations) => {
-            const el = document.querySelector(selector);
-            if (el && !el.dataset.tutorialListened) {
-                el.dataset.tutorialListened = 'true';
-                const originalClick = el.onclick;
-                el.addEventListener('click', () => {
-                    setTimeout(() => this.nextStep(), 100);
-                }, { once: true });
-            }
-        });
-        observer.observe(document.body, { childList: true, subtree: true });
-
-        // 直接檢查一次
-        const el = document.querySelector(selector);
-        if (el) {
-            el.addEventListener('click', () => {
-                setTimeout(() => this.nextStep(), 100);
-            }, { once: true });
-        }
-    },
-
-    nextStep() {
-        this.showStep(this.currentStep + 1);
-    },
-
-    positionBox(targetEl) {
-        const box = this.overlay.querySelector('.tutorial-box');
+    // 定位 Tooltip
+    positionTooltip(targetEl) {
         const rect = targetEl.getBoundingClientRect();
+        const tooltipRect = this.tooltip.getBoundingClientRect();
 
-        box.style.position = 'absolute';
+        let top = rect.bottom + 15;
+        let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
 
-        // 簡單的定位邏輯：放在目標下方或中央
-        if (rect.top > window.innerHeight / 2) {
-            // 在上方
-            box.style.bottom = (window.innerHeight - rect.top + 20) + 'px';
-            box.style.top = 'auto';
-        } else {
-            // 在下方
-            box.style.top = (rect.bottom + 20) + 'px';
-            box.style.bottom = 'auto';
+        // 邊界檢查
+        if (left < 10) left = 10;
+        if (left + tooltipRect.width > window.innerWidth - 10) left = window.innerWidth - tooltipRect.width - 10;
+        if (top + tooltipRect.height > window.innerHeight - 10) {
+            top = rect.top - tooltipRect.height - 15; // 改為上方顯示
         }
 
-        box.style.left = '50%';
-        box.style.transform = 'translateX(-50%)';
+        this.tooltip.style.top = `${top}px`;
+        this.tooltip.style.left = `${left}px`;
+        this.tooltip.style.transform = 'translateY(0)';
     },
 
-    centerBox() {
-        const box = this.overlay.querySelector('.tutorial-box');
-        box.style.position = 'absolute';
-        box.style.top = '50%';
-        box.style.left = '50%';
-        box.style.transform = 'translate(-50%, -50%)';
-        box.style.bottom = 'auto';
+    // 顯示 Highlight
+    showHighlight(targetEl) {
+        const rect = targetEl.getBoundingClientRect();
+        this.highlightBox.style.width = `${rect.width + 10}px`;
+        this.highlightBox.style.height = `${rect.height + 10}px`;
+        this.highlightBox.style.top = `${rect.top + window.scrollY - 5}px`;
+        this.highlightBox.style.left = `${rect.left + window.scrollX - 5}px`;
+        this.highlightBox.style.display = 'block';
     },
 
-    finish() {
+    hideHighlight() {
+        this.highlightBox.style.display = 'none';
+    },
+
+    // 綁定事件
+    bindEvent(step, targetEl) {
+        // 清除舊事件 (簡化版：假設事件是一次性的或者我們控制流程)
+        // 這裡如果是 click 事件，我們監聽目標的 click
+        if (step.event === 'click' && targetEl) {
+            const handler = () => {
+                targetEl.removeEventListener('click', handler);
+                // 稍微延遲以讓遊戲邏輯先執行
+                setTimeout(() => this.nextStep(), 300);
+            };
+            targetEl.addEventListener('click', handler);
+        }
+    },
+
+    // 下一步
+    nextStep() {
+        this.hideHighlight();
+        this.tooltip.classList.remove('visible');
+        setTimeout(() => {
+            this.startStep(this.currentStepIndex + 1);
+        }, 300);
+    },
+
+    // 結束教學
+    endTutorial() {
         this.active = false;
-        if (this.overlay) document.body.removeChild(this.overlay);
-        document.querySelectorAll('.tutorial-highlight').forEach(el => el.classList.remove('tutorial-highlight'));
-        // 如果是點擊結束教學，可以重新導向或直接開始
+        if (this.tooltip) this.tooltip.remove();
+        if (this.highlightBox) this.highlightBox.remove();
+        // 清除 URL 參數 (可選)
+        const url = new URL(window.location);
+        url.searchParams.delete('mode');
+        window.history.replaceState({}, '', url);
+        console.log("Tutorial Completed");
     }
 };
 
 window.Tutorial = Tutorial;
-document.addEventListener('DOMContentLoaded', () => Tutorial.init());

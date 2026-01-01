@@ -400,8 +400,16 @@ function applySkillEffect(skill, playerState, player, onComplete) {
 
         case 'reduce_next_damage':
             if (enemy.battle) {
-                enemy.battle.nextDamageIncrease = -(skill.value || 0.9);
-                addLog(`對手下次傷害將減少 ${Math.round((skill.value || 0.9) * 100)}%`, 'info');
+                isAsync = true;
+                showProbabilityRoll(skill.name, skill.chance || 1, (success) => {
+                    if (success) {
+                        enemy.battle.nextDamageIncrease = -(skill.value || 0.9);
+                        addLog(`對手下次傷害將減少 ${Math.round((skill.value || 0.9) * 100)}%`, 'info');
+                    } else {
+                        addLog('減傷判定失敗', 'info');
+                    }
+                    done();
+                });
             }
             break;
 
@@ -418,17 +426,36 @@ function applySkillEffect(skill, playerState, player, onComplete) {
             break;
 
         //========== 狀態異常 ==========
+        // ========== 狀態異常 ==========
         case 'disable_skill':
+            const duration = skill.duration || 1;
+            let blockedCount = 0;
+
+            // 禁用對手戰鬥卡
             if (enemy.battle) {
-                enemy.battle.disabledUntil = skill.duration || 1;
-                addLog(`對方 ${enemy.battle.name} 技能被禁用${skill.duration || 1}回合`, 'info');
+                enemy.battle.disabledUntil = duration;
+                blockedCount++;
             }
+            // 禁用對手手牌
+            if (enemy.hand && enemy.hand.length > 0) {
+                enemy.hand.forEach(c => {
+                    c.disabledUntil = duration;
+                    blockedCount++;
+                });
+            }
+
+            addLog(`禁用了對手 ${blockedCount} 張卡牌的技能 ${duration} 回合`, 'info');
             break;
 
         case 'conditional_disable':
             if (skill.condition === 'hp_higher' && enemy.battle && enemy.battle.hp > card.hp) {
-                enemy.battle.disabledUntil = skill.duration;
-                addLog(`對方 ${enemy.battle.name} 血量較高，技能被禁用${skill.duration}回合`, 'info');
+                // 也改為全體禁用？ 描述是"禁用對方技能"，通常理解為全體
+                // 但為了安全起見，若是單體技能則維持單體，若是 "Global Skill Disable" 任務特指則改全體
+                // 這裡假設這也是全體
+                const d = skill.duration;
+                if (enemy.battle) enemy.battle.disabledUntil = d;
+                enemy.hand.forEach(c => c.disabledUntil = d);
+                addLog(`對方血量較高，全體技能被禁用${d}回合`, 'info');
             }
             break;
 
@@ -539,7 +566,8 @@ function applySkillEffect(skill, playerState, player, onComplete) {
                             drawOne();
                         });
                     } else {
-                        drawOne();
+                        addLog('無牌可抽！', 'info');
+                        done(); // Stop if no cards
                     }
                 } else {
                     addLog(`抽${skill.value}張牌`, 'info');
@@ -595,6 +623,8 @@ function applySkillEffect(skill, playerState, player, onComplete) {
                             summonOne();
                         });
                     } else {
+                        // 召喚失敗也繼續？
+                        summonCount++;
                         summonOne();
                     }
                 } else {

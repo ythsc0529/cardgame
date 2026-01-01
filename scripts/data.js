@@ -218,9 +218,7 @@ const CHARACTERS = [
     {
         id: 25, rarity: "史詩", name: "抽卡員", hp: 180, maxHp: 180, atk: 20,
         skills: [
-            { name: "抽兩張牌", cooldown: 99, currentCd: 0, effect: "draw", value: 2 },
-            { name: "抽兩張牌", cooldown: 2, currentCd: 0, effect: "draw", value: 2 },
-            { name: "抽兩張牌", cooldown: 2, currentCd: 0, effect: "draw", value: 2 }
+            { name: "抽兩張牌", cooldown: 99, currentCd: 0, effect: "draw", value: 2 }
         ],
         passive: null
     },
